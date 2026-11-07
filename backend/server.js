@@ -3,15 +3,19 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import db from './config/db.js';
 import parametresRouter from './routes/parametres.js';
+import astronautesRouter from './routes/astronautes.js';
 
 dotenv.config();
 const app = express();
 
-//middlewares
+//middlewares before all routes 
 app.use(cors());
 app.use(express.json());
 
+
+
 app.use('/api/parametres' , parametresRouter);
+app.use('/api/astronautes', astronautesRouter);
 //test route 
 app.get('/' , (req, res)=>{
     res.send('astrohealth API is running!');
