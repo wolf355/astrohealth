@@ -1,0 +1,18 @@
+:root {
+  --fond: #0B1220;
+  --carte: #131C2E;
+  --bordure: #22304A;
+  --accent: #3B82F6;
+  --texte: #E5E7EB;
+  --texte-secondaire: #94A3B8;
+  --vert: #22C55E;
+  --orange: #F59E0B;
+  --rouge: #EF4444;
+}
+
+body {
+  margin: 0;
+  background: var(--fond);
+  color: var(--texte);
+  font-family: Inter, Arial, sans-serif;
+}
