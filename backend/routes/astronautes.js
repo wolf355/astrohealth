@@ -14,7 +14,7 @@ router.get('/', (req, res) => {
         INNER JOIN utilisateur u
             ON a.id_utilisateur = u.id_utilisateur `;
 
-            
+
     db.query(sql, (error, results) => {
         if (error) {
             console.error(error);
@@ -22,6 +22,42 @@ router.get('/', (req, res) => {
                 message: 'Erreur lors de la recuperation des astronautes'
             });
         }
+        res.status(200).json(results);
+    });
+});
+
+
+router.get('/:id/mesures/latest', (req, res) => {
+    const { id } = req.params;
+
+    const sql = `
+        SELECT
+            p.Code AS code,
+            m.valeur,
+            m.valeur_secondaire,
+            m.horodatage
+        FROM Parametre p
+        INNER JOIN Mesure m
+            ON p.id_parametre = m.id_parametre
+        WHERE m.id_astronaute = ?
+          AND m.id_mesure = (
+              SELECT m2.id_mesure
+              FROM Mesure m2
+              WHERE m2.id_astronaute = m.id_astronaute
+                AND m2.id_parametre = m.id_parametre
+              ORDER BY m2.horodatage DESC
+              LIMIT 1
+          )
+        ORDER BY p.Code; `;
+
+    db.query(sql, [id], (error, results) => {
+        if (error) {
+            console.error(error);
+            return res.status(500).json({
+                message: 'Erreur lors de la recuperation des dernieres mesures'
+            });
+        }
+
         res.status(200).json(results);
     });
 });
