@@ -1,0 +1,39 @@
+<div class="page">
+  <h1>API test</h1>
+  <p class="info">Data loaded from http://localhost:3000/api/parametres</p>
+
+  @if (chargement()) {
+    <p>Loading...</p>
+  }
+
+  @if (erreur() !== '') {
+    <p class="erreur">{{ erreur() }}</p>
+  }
+
+  @if (parametres().length > 0) {
+    <p class="succes">API connected: {{ parametres().length }} parameters received.</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Label</th>
+          <th>Unit</th>
+          <th>Normal range</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of parametres(); track p.id_parametre) {
+          <tr>
+            <td>{{ p.code }}</td>
+            <td>{{ p.libelle }}</td>
+            <td>{{ p.unite }}</td>
+            <td>{{ p.plage_normale_min }} - {{ p.plage_normale_max }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+
+  <a routerLink="/">Back to profile selection</a>
+</div>
