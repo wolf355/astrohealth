@@ -154,3 +154,28 @@ nav a.actif {
   position: relative;
   height: 300px;
 }
+
+.graphiques {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.carte-reco {
+  margin-top: 16px;
+  padding: 20px;
+  background: var(--carte);
+  border: 1px solid var(--bordure);
+  border-left: 4px solid var(--vert);
+  border-radius: 12px;
+}
+
+.carte-reco h3 {
+  margin: 0 0 8px;
+}
+
+.carte-reco p {
+  margin: 0;
+  color: var(--texte-secondaire);
+}

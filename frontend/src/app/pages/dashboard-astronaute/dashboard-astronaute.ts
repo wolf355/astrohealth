@@ -25,51 +25,60 @@ export class DashboardAstronaute implements AfterViewInit {
 
   heures = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00'];
   valeursFc = [70, 72, 71, 74, 73, 72, 72];
+  valeursSpo2 = [98, 98, 97, 98, 98, 98, 98];
+
+  recommandation = 'All vital signs are within normal range. Keep up your exercise routine and hydration.';
 
   private platformId = inject(PLATFORM_ID);
-  @ViewChild('graphiqueFc') graphiqueFc!: ElementRef<HTMLCanvasElement>;
 
-    ngAfterViewInit() {
+  @ViewChild('graphiqueFc') graphiqueFc!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('graphiqueSpo2') graphiqueSpo2!: ElementRef<HTMLCanvasElement>;
+
+  ngAfterViewInit() {
     if (isPlatformBrowser(this.platformId)) {
-      this.creerGraphiqueFc();
+      this.creerGraphique(this.graphiqueFc, 'Heart rate (bpm)', this.valeursFc, 40, 120, [
+        { label: 'Normal min (60)', valeur: 60, couleur: '#22C55E' },
+        { label: 'Normal max (100)', valeur: 100, couleur: '#22C55E' }
+      ]);
+
+      this.creerGraphique(this.graphiqueSpo2, 'SpO2 (%)', this.valeursSpo2, 85, 100, [
+        { label: 'Normal min (95)', valeur: 95, couleur: '#22C55E' },
+        { label: 'Alert threshold (92)', valeur: 92, couleur: '#EF4444' }
+      ]);
     }
   }
 
-  creerGraphiqueFc() {
-    new Chart(this.graphiqueFc.nativeElement, {
+  creerGraphique(
+    canvas: ElementRef<HTMLCanvasElement>,
+    titre: string,
+    valeurs: number[],
+    min: number,
+    max: number,
+    lignes: { label: string; valeur: number; couleur: string }[]
+  ) {
+    const datasets: any[] = [
+      { label: titre, data: valeurs, borderColor: '#3B82F6', tension: 0.3, pointRadius: 3 }
+    ];
+
+    for (const ligne of lignes) {
+      datasets.push({
+        label: ligne.label,
+        data: this.heures.map(() => ligne.valeur),
+        borderColor: ligne.couleur,
+        borderDash: [6, 6],
+        pointRadius: 0
+      });
+    }
+
+    new Chart(canvas.nativeElement, {
       type: 'line',
-      data: {
-        labels: this.heures,
-        datasets: [
-          {
-            label: 'Heart rate (bpm)',
-            data: this.valeursFc,
-            borderColor: '#3B82F6',
-            tension: 0.3,
-            pointRadius: 3
-          },
-          {
-            label: 'Normal min (60)',
-            data: this.heures.map(() => 60),
-            borderColor: '#22C55E',
-            borderDash: [6, 6],
-            pointRadius: 0
-          },
-          {
-            label: 'Normal max (100)',
-            data: this.heures.map(() => 100),
-            borderColor: '#22C55E',
-            borderDash: [6, 6],
-            pointRadius: 0
-          }
-        ]
-      },
+      data: { labels: this.heures, datasets: datasets },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         scales: {
           x: { ticks: { color: '#94A3B8' }, grid: { color: '#22304A' } },
-          y: { min: 40, max: 120, ticks: { color: '#94A3B8' }, grid: { color: '#22304A' } }
+          y: { min: min, max: max, ticks: { color: '#94A3B8' }, grid: { color: '#22304A' } }
         },
         plugins: {
           legend: { labels: { color: '#94A3B8' } }

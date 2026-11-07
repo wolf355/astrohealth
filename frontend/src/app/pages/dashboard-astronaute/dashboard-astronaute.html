@@ -35,12 +35,28 @@
         </div>
       }
     </section>
-        <section class="carte-graphique">
-      <h3>Heart rate - last 6 hours</h3>
-      <div class="zone-graphique">
-        <canvas #graphiqueFc></canvas>
+
+    <section class="graphiques">
+      <div class="carte-graphique">
+        <h3>Heart rate - last 6 hours</h3>
+        <div class="zone-graphique">
+          <canvas #graphiqueFc></canvas>
+        </div>
+      </div>
+
+      <div class="carte-graphique">
+        <h3>SpO2 - last 6 hours</h3>
+        <div class="zone-graphique">
+          <canvas #graphiqueSpo2></canvas>
+        </div>
       </div>
     </section>
+
+    <section class="carte-reco">
+      <h3>Recommendations</h3>
+      <p>{{ recommandation }}</p>
+    </section>
+
     <p class="avertissement">AI assistant is not a substitute for a doctor.</p>
   </main>
 </div>
