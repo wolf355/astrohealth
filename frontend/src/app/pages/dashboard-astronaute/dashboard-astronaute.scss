@@ -179,3 +179,62 @@ nav a.actif {
   margin: 0;
   color: var(--texte-secondaire);
 }
+
+.bouton-demo {
+  padding: 6px 14px;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.bouton-demo:hover {
+  background: var(--accent);
+  color: white;
+}
+
+.pastille {
+  display: inline-block;
+  min-width: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--rouge);
+  color: white;
+  font-size: 11px;
+  text-align: center;
+}
+
+.bandeau {
+  margin-bottom: 16px;
+  padding: 14px 18px;
+  border-radius: 12px;
+}
+
+.bandeau.attention {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid var(--orange);
+  color: var(--orange);
+}
+
+.bandeau.critique {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid var(--rouge);
+  color: var(--rouge);
+}
+
+.carte-mesure.attention {
+  border-color: var(--orange);
+}
+
+.carte-mesure.critique {
+  border-color: var(--rouge);
+}
+
+.carte-reco.attention {
+  border-left-color: var(--orange);
+}
+
+.carte-reco.critique {
+  border-left-color: var(--rouge);
+}

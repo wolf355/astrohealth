@@ -23,12 +23,22 @@
       <div class="infos">
         <span>Day {{ jour }}</span>
         <span><span class="point"></span>Ground link: Online</span>
+        <span class="cloche">🔔 @if (enAlerte) { <span class="pastille">1</span> }</span>
+        <button class="bouton-demo" (click)="basculer()">
+          {{ enAlerte ? 'Back to normal' : 'Simulate alert' }}
+        </button>
       </div>
     </header>
 
+    @if (enAlerte) {
+      <div [class]="'bandeau ' + niveauAlerte">
+        <strong>Alert:</strong> {{ messageAlerte }}
+      </div>
+    }
+
     <section class="cartes">
       @for (m of mesures; track m.label) {
-        <div class="carte-mesure">
+        <div [class]="'carte-mesure ' + m.etat">
           <p class="label">{{ m.label }}</p>
           <p class="valeur">{{ m.valeur }} <span class="unite">{{ m.unite }}</span></p>
           <span [class]="'badge ' + m.etat">{{ m.etat }}</span>
@@ -52,7 +62,7 @@
       </div>
     </section>
 
-    <section class="carte-reco">
+    <section [class]="'carte-reco ' + (enAlerte ? niveauAlerte : 'normal')">
       <h3>Recommendations</h3>
       <p>{{ recommandation }}</p>
     </section>
