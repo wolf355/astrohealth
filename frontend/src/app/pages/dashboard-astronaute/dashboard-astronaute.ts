@@ -49,6 +49,11 @@ export class DashboardAstronaute implements AfterViewInit {
   mesures = this.donneesNormales.mesures;
   recommandation = this.donneesNormales.reco;
 
+  chatOuvert = false;
+  messages: { auteur: string; texte: string }[] = [
+    { auteur: 'assistant', texte: 'Hello! I am the AstroHealth assistant. Ask me about your vital signs or your alerts.' }
+  ];
+
   private platformId = inject(PLATFORM_ID);
   private graphFc?: Chart;
   private graphSpo2?: Chart;
@@ -84,6 +89,38 @@ export class DashboardAstronaute implements AfterViewInit {
       graphique.data.datasets[0].data = valeurs;
       graphique.update();
     }
+  }
+
+  ouvrirFermerChat() {
+    this.chatOuvert = !this.chatOuvert;
+  }
+
+  envoyer(champ: HTMLInputElement) {
+    const question = champ.value.trim();
+    if (question === '') {
+      return;
+    }
+    this.messages.push({ auteur: 'utilisateur', texte: question });
+    champ.value = '';
+    this.messages.push({ auteur: 'assistant', texte: this.reponseAssistant(question) });
+  }
+
+  // Réponses préécrites (mode de secours). Sera remplacé par l'appel à l'API.
+  reponseAssistant(question: string): string {
+    const q = question.toLowerCase();
+
+    if (this.enAlerte) {
+      return 'Your SpO2 is 91 %, below the alert threshold of 92 %, and your heart rate rose to 108 bpm. '
+        + 'I cannot give a diagnosis. Please rest, re-measure in 10 minutes, '
+        + 'and contact the ground doctor if it stays below 92 %.';
+    }
+
+    if (q.includes('spo2') || q.includes('oxygen') || q.includes('heart') || q.includes('how')) {
+      return 'Right now your heart rate is 72 bpm and your SpO2 is 98 %. Both are within the normal range.';
+    }
+
+    return 'I can explain your measurements and your alerts. For example, ask: "How are my vital signs?" '
+      + 'I cannot give a medical diagnosis.';
   }
 
   creerGraphique(

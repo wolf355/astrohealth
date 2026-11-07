@@ -69,4 +69,26 @@
 
     <p class="avertissement">AI assistant is not a substitute for a doctor.</p>
   </main>
+
+  <button class="bouton-chat" (click)="ouvrirFermerChat()">💬</button>
+
+  @if (chatOuvert) {
+    <div class="panneau-chat">
+      <div class="chat-titre">AstroHealth Assistant</div>
+      <div class="chat-avertissement">
+        Not a medical diagnosis. Always contact the ground doctor for serious symptoms.
+      </div>
+
+      <div class="chat-messages">
+        @for (m of messages; track $index) {
+          <div [class]="'message ' + m.auteur">{{ m.texte }}</div>
+        }
+      </div>
+
+      <div class="chat-saisie">
+        <input #champ type="text" placeholder="Ask a question..." (keyup.enter)="envoyer(champ)">
+        <button (click)="envoyer(champ)">Send</button>
+      </div>
+    </div>
+  }
 </div>
