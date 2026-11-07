@@ -1,1 +1,41 @@
-<p>dashboard-astronaute works!</p>
+<div class="layout">
+  <aside class="sidebar">
+    <div>
+      <h2>AstroHealth</h2>
+      <nav>
+        <a class="actif">Dashboard</a>
+        <a>History</a>
+        <a>Assistant</a>
+        <a>Settings</a>
+      </nav>
+    </div>
+
+    <div class="utilisateur">
+      <strong>{{ nom }}</strong>
+      <span>Mission {{ mission }}</span>
+      <a routerLink="/">Change profile</a>
+    </div>
+  </aside>
+
+  <main class="contenu">
+    <header class="barre">
+      <h1>My Health</h1>
+      <div class="infos">
+        <span>Day {{ jour }}</span>
+        <span><span class="point"></span>Ground link: Online</span>
+      </div>
+    </header>
+
+    <section class="cartes">
+      @for (m of mesures; track m.label) {
+        <div class="carte-mesure">
+          <p class="label">{{ m.label }}</p>
+          <p class="valeur">{{ m.valeur }} <span class="unite">{{ m.unite }}</span></p>
+          <span [class]="'badge ' + m.etat">{{ m.etat }}</span>
+        </div>
+      }
+    </section>
+
+    <p class="avertissement">AI assistant is not a substitute for a doctor.</p>
+  </main>
+</div>
