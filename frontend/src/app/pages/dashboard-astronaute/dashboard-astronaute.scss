@@ -137,3 +137,20 @@ nav a.actif {
   font-size: 12px;
   color: var(--texte-secondaire);
 }
+
+.carte-graphique {
+  margin-top: 24px;
+  padding: 20px;
+  background: var(--carte);
+  border: 1px solid var(--bordure);
+  border-radius: 12px;
+}
+
+.carte-graphique h3 {
+  margin: 0 0 16px;
+}
+
+.zone-graphique {
+  position: relative;
+  height: 300px;
+}
