@@ -14,7 +14,6 @@ router.get('/', (req, res) => {
         INNER JOIN utilisateur u
             ON a.id_utilisateur = u.id_utilisateur `;
 
-
     db.query(sql, (error, results) => {
         if (error) {
             console.error(error);
@@ -25,6 +24,8 @@ router.get('/', (req, res) => {
         res.status(200).json(results);
     });
 });
+
+
 
 
 router.get('/:id/mesures/latest', (req, res) => {
@@ -61,5 +62,45 @@ router.get('/:id/mesures/latest', (req, res) => {
         res.status(200).json(results);
     });
 });
+
+
+
+
+router.get('/:id/mesures', (req, res) => {
+    const { id } = req.params;
+    const { parametre, debut, fin } = req.query;
+
+    if (!parametre || !debut || !fin) {
+        return res.status(400).json({
+            message: 'parametre, debut et fin sont obligatoires'
+        });
+    }
+    
+    const sql = `
+        SELECT
+            p.Code AS code,
+            m.valeur,
+            m.valeur_secondaire,
+            m.horodatage
+        FROM Mesure m
+        INNER JOIN Parametre p
+            ON m.id_parametre = p.id_parametre
+        WHERE m.id_astronaute = ?
+          AND p.Code = ?
+          AND m.horodatage BETWEEN ? AND ?
+        ORDER BY m.horodatage ASC
+    `;
+
+    db.query(sql, [id, parametre, debut, fin], (error, results) => {
+        if (error) {
+            console.error(error);
+            return res.status(500).json({
+                message: 'Erreur lors de la récupération des mesures'
+            });
+        }
+        res.status(200).json(results);
+    });
+});
+
 
 export default router;
