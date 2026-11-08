@@ -1,0 +1,335 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 240px;
+  box-sizing: border-box;
+  padding: 24px 16px;
+  background: var(--carte);
+  border-right: 1px solid var(--bordure);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+nav a {
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: var(--texte-secondaire);
+}
+
+nav a.actif {
+  background: var(--accent);
+  color: white;
+}
+
+.utilisateur {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--texte-secondaire);
+}
+
+.utilisateur a {
+  margin-top: 8px;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.contenu {
+  flex: 1;
+  padding: 24px 32px;
+}
+
+.barre {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.barre h1 {
+  margin: 0;
+}
+
+.infos {
+  display: flex;
+  gap: 20px;
+  font-size: 14px;
+  color: var(--texte-secondaire);
+}
+
+.point {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--vert);
+}
+
+.cartes {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.carte-mesure {
+  padding: 20px;
+  background: var(--carte);
+  border: 1px solid var(--bordure);
+  border-radius: 12px;
+}
+
+.label {
+  margin: 0 0 12px;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--texte-secondaire);
+}
+
+.valeur {
+  margin: 0 0 12px;
+  font-size: 32px;
+  font-weight: bold;
+}
+
+.unite {
+  font-size: 14px;
+  font-weight: normal;
+  color: var(--texte-secondaire);
+}
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  text-transform: capitalize;
+}
+
+.badge.normal {
+  background: rgba(34, 197, 94, 0.15);
+  color: var(--vert);
+}
+
+.badge.attention {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--orange);
+}
+
+.badge.critique {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--rouge);
+}
+
+.avertissement {
+  margin-top: 40px;
+  font-size: 12px;
+  color: var(--texte-secondaire);
+}
+
+.carte-graphique {
+  margin-top: 24px;
+  padding: 20px;
+  background: var(--carte);
+  border: 1px solid var(--bordure);
+  border-radius: 12px;
+}
+
+.carte-graphique h3 {
+  margin: 0 0 16px;
+}
+
+.zone-graphique {
+  position: relative;
+  height: 300px;
+}
+
+.graphiques {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.carte-reco {
+  margin-top: 16px;
+  padding: 20px;
+  background: var(--carte);
+  border: 1px solid var(--bordure);
+  border-left: 4px solid var(--vert);
+  border-radius: 12px;
+}
+
+.carte-reco h3 {
+  margin: 0 0 8px;
+}
+
+.carte-reco p {
+  margin: 0;
+  color: var(--texte-secondaire);
+}
+
+.bouton-demo {
+  padding: 6px 14px;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.bouton-demo:hover {
+  background: var(--accent);
+  color: white;
+}
+
+.pastille {
+  display: inline-block;
+  min-width: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--rouge);
+  color: white;
+  font-size: 11px;
+  text-align: center;
+}
+
+.bandeau {
+  margin-bottom: 16px;
+  padding: 14px 18px;
+  border-radius: 12px;
+}
+
+.bandeau.attention {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid var(--orange);
+  color: var(--orange);
+}
+
+.bandeau.critique {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid var(--rouge);
+  color: var(--rouge);
+}
+
+.carte-mesure.attention {
+  border-color: var(--orange);
+}
+
+.carte-mesure.critique {
+  border-color: var(--rouge);
+}
+
+.carte-reco.attention {
+  border-left-color: var(--orange);
+}
+
+.carte-reco.critique {
+  border-left-color: var(--rouge);
+}
+
+.bouton-chat {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  width: 56px;
+  height: 56px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.panneau-chat {
+  position: fixed;
+  right: 24px;
+  bottom: 96px;
+  width: 360px;
+  height: 480px;
+  display: flex;
+  flex-direction: column;
+  background: var(--carte);
+  border: 1px solid var(--bordure);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.chat-titre {
+  padding: 14px 16px;
+  font-weight: bold;
+  border-bottom: 1px solid var(--bordure);
+}
+
+.chat-avertissement {
+  padding: 8px 16px;
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--orange);
+  font-size: 12px;
+}
+
+.chat-messages {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.message {
+  max-width: 85%;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.message.assistant {
+  align-self: flex-start;
+  background: var(--fond);
+  border: 1px solid var(--bordure);
+}
+
+.message.utilisateur {
+  align-self: flex-end;
+  background: var(--accent);
+  color: white;
+}
+
+.chat-saisie {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  border-top: 1px solid var(--bordure);
+}
+
+.chat-saisie input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid var(--bordure);
+  border-radius: 8px;
+  background: var(--fond);
+  color: var(--texte);
+}
+
+.chat-saisie button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  background: var(--accent);
+  color: white;
+  cursor: pointer;
+}

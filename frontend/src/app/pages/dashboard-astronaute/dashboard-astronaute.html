@@ -1,0 +1,94 @@
+<div class="layout">
+  <aside class="sidebar">
+    <div>
+      <h2>AstroHealth</h2>
+      <nav>
+        <a class="actif">Dashboard</a>
+        <a>History</a>
+        <a>Assistant</a>
+        <a>Settings</a>
+      </nav>
+    </div>
+
+    <div class="utilisateur">
+      <strong>{{ nom }}</strong>
+      <span>Mission {{ mission }}</span>
+      <a routerLink="/">Change profile</a>
+    </div>
+  </aside>
+
+  <main class="contenu">
+    <header class="barre">
+      <h1>My Health</h1>
+      <div class="infos">
+        <span>Day {{ jour }}</span>
+        <span><span class="point"></span>Ground link: Online</span>
+        <span class="cloche">🔔 @if (enAlerte) { <span class="pastille">1</span> }</span>
+        <button class="bouton-demo" (click)="basculer()">
+          {{ enAlerte ? 'Back to normal' : 'Simulate alert' }}
+        </button>
+      </div>
+    </header>
+
+    @if (enAlerte) {
+      <div [class]="'bandeau ' + niveauAlerte">
+        <strong>Alert:</strong> {{ messageAlerte }}
+      </div>
+    }
+
+    <section class="cartes">
+      @for (m of mesures; track m.label) {
+        <div [class]="'carte-mesure ' + m.etat">
+          <p class="label">{{ m.label }}</p>
+          <p class="valeur">{{ m.valeur }} <span class="unite">{{ m.unite }}</span></p>
+          <span [class]="'badge ' + m.etat">{{ m.etat }}</span>
+        </div>
+      }
+    </section>
+
+    <section class="graphiques">
+      <div class="carte-graphique">
+        <h3>Heart rate - last 6 hours</h3>
+        <div class="zone-graphique">
+          <canvas #graphiqueFc></canvas>
+        </div>
+      </div>
+
+      <div class="carte-graphique">
+        <h3>SpO2 - last 6 hours</h3>
+        <div class="zone-graphique">
+          <canvas #graphiqueSpo2></canvas>
+        </div>
+      </div>
+    </section>
+
+    <section [class]="'carte-reco ' + (enAlerte ? niveauAlerte : 'normal')">
+      <h3>Recommendations</h3>
+      <p>{{ recommandation }}</p>
+    </section>
+
+    <p class="avertissement">AI assistant is not a substitute for a doctor.</p>
+  </main>
+
+  <button class="bouton-chat" (click)="ouvrirFermerChat()">💬</button>
+
+  @if (chatOuvert) {
+    <div class="panneau-chat">
+      <div class="chat-titre">AstroHealth Assistant</div>
+      <div class="chat-avertissement">
+        Not a medical diagnosis. Always contact the ground doctor for serious symptoms.
+      </div>
+
+      <div class="chat-messages">
+        @for (m of messages; track $index) {
+          <div [class]="'message ' + m.auteur">{{ m.texte }}</div>
+        }
+      </div>
+
+      <div class="chat-saisie">
+        <input #champ type="text" placeholder="Ask a question..." (keyup.enter)="envoyer(champ)">
+        <button (click)="envoyer(champ)">Send</button>
+      </div>
+    </div>
+  }
+</div>
