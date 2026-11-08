@@ -5,6 +5,7 @@ import db from './config/db.js';
 import parametresRouter from './routes/parametres.js';
 import astronautesRouter from './routes/astronautes.js';
 import alertesRouter from './routes/alertes.js';
+import mesuresRouter from './routes/mesures.js';
 
 
 dotenv.config();
@@ -18,6 +19,7 @@ app.use(express.json());
 app.use('/api/parametres' , parametresRouter);
 app.use('/api/astronautes', astronautesRouter);
 app.use ('/api/alertes' , alertesRouter);
+app.use('/api/mesures', mesuresRouter);
 //test route 
 app.get('/' , (req, res)=>{
     res.send('astrohealth API is running!');
