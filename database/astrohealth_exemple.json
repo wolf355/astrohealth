@@ -1,0 +1,770 @@
+{
+  "_meta": {
+    "projet": "AstroHealth",
+    "version_schema": "v3",
+    "scenario": "Mission Artemis-X, jour 42 (7 novembre 2026). Reprend les écrans des maquettes : équipage de 4 astronautes, 1 médecin, 2 alertes actives et 1 alerte critique résolue la veille.",
+    "formats": "Dates au format ISO 8601 sans fuseau. Décimaux en nombres. Booléens true/false (stockés en TINYINT(1)). Identifiants UUID pour mesure, alerte, recommandation, ressenti, message_ia.",
+    "notes": [
+      "Les mots de passe sont des valeurs fictives : ne jamais utiliser ce fichier tel quel en production.",
+      "Les noms (nom_code) sont fictifs et repris des maquettes. Ne jamais envoyer nom_code à l'assistant IA (BNF11) : lui transmettre un identifiant anonyme.",
+      "Les 19 seuils par défaut (id_astronaute à null) correspondent aux données de départ de la base ; leurs id sont indicatifs.",
+      "La tension artérielle (TA) stocke la systolique dans valeur et la diastolique dans valeur_secondaire. Les limites sont seuil_max (systolique) et seuil_secondaire_max (diastolique) : alerte si l'une des deux est dépassée.",
+      "La mesure de SpO2 de 14:40 est une saisie manuelle non synchronisée (synchronisee à false) : elle illustre le mode hors ligne."
+    ]
+  },
+  "mission": [
+    {
+      "id_mission": 1,
+      "nom_mission": "Artemis-X",
+      "environnement": "vaisseau",
+      "date_debut": "2026-09-27",
+      "date_fin": "2027-03-26"
+    }
+  ],
+  "utilisateur": [
+    {
+      "id_utilisateur": 1,
+      "nom_code": "Alex Moreau",
+      "email": "alex.moreau@astrohealth.example",
+      "mot_de_passe_hash": "$2b$10$EXEMPLE_DE_HASH_FICTIF_A_REMPLACER_PAR_BCRYPT_000000000000",
+      "role": "commandant",
+      "fonction": "commandant",
+      "date_creation": "2026-09-20T09:00:00"
+    },
+    {
+      "id_utilisateur": 2,
+      "nom_code": "Sara Khan",
+      "email": "sara.khan@astrohealth.example",
+      "mot_de_passe_hash": "$2b$10$EXEMPLE_DE_HASH_FICTIF_A_REMPLACER_PAR_BCRYPT_000000000000",
+      "role": "astronaute",
+      "fonction": "specialiste de mission",
+      "date_creation": "2026-09-20T09:00:00"
+    },
+    {
+      "id_utilisateur": 3,
+      "nom_code": "Leo Tanaka",
+      "email": "leo.tanaka@astrohealth.example",
+      "mot_de_passe_hash": "$2b$10$EXEMPLE_DE_HASH_FICTIF_A_REMPLACER_PAR_BCRYPT_000000000000",
+      "role": "astronaute",
+      "fonction": "pilote",
+      "date_creation": "2026-09-20T09:00:00"
+    },
+    {
+      "id_utilisateur": 4,
+      "nom_code": "Mia Rossi",
+      "email": "mia.rossi@astrohealth.example",
+      "mot_de_passe_hash": "$2b$10$EXEMPLE_DE_HASH_FICTIF_A_REMPLACER_PAR_BCRYPT_000000000000",
+      "role": "astronaute",
+      "fonction": "ingenieur de vol",
+      "date_creation": "2026-09-20T09:00:00"
+    },
+    {
+      "id_utilisateur": 5,
+      "nom_code": "Dr. Maya Chen",
+      "email": "maya.chen@astrohealth.example",
+      "mot_de_passe_hash": "$2b$10$EXEMPLE_DE_HASH_FICTIF_A_REMPLACER_PAR_BCRYPT_000000000000",
+      "role": "medecin",
+      "fonction": "chirurgien de vol",
+      "date_creation": "2026-09-20T09:00:00"
+    }
+  ],
+  "astronaute": [
+    {
+      "id_astronaute": 1,
+      "id_utilisateur": 1,
+      "id_mission": 1,
+      "age": 45,
+      "sexe": "M",
+      "poids": 78.5,
+      "taille": 180.0
+    },
+    {
+      "id_astronaute": 2,
+      "id_utilisateur": 2,
+      "id_mission": 1,
+      "age": 38,
+      "sexe": "F",
+      "poids": 62.0,
+      "taille": 168.0
+    },
+    {
+      "id_astronaute": 3,
+      "id_utilisateur": 3,
+      "id_mission": 1,
+      "age": 41,
+      "sexe": "M",
+      "poids": 82.0,
+      "taille": 185.0
+    },
+    {
+      "id_astronaute": 4,
+      "id_utilisateur": 4,
+      "id_mission": 1,
+      "age": 36,
+      "sexe": "F",
+      "poids": 58.5,
+      "taille": 165.0
+    }
+  ],
+  "parametre": [
+    {
+      "id_parametre": 1,
+      "code": "FC",
+      "libelle": "Fréquence cardiaque",
+      "unite": "bpm",
+      "plage_normale_min": 60,
+      "plage_normale_max": 100
+    },
+    {
+      "id_parametre": 2,
+      "code": "SPO2",
+      "libelle": "Saturation en oxygène",
+      "unite": "%",
+      "plage_normale_min": 95,
+      "plage_normale_max": 100
+    },
+    {
+      "id_parametre": 3,
+      "code": "TEMP",
+      "libelle": "Température corporelle",
+      "unite": "°C",
+      "plage_normale_min": 36.1,
+      "plage_normale_max": 37.2
+    },
+    {
+      "id_parametre": 4,
+      "code": "TA",
+      "libelle": "Tension artérielle",
+      "unite": "mmHg",
+      "plage_normale_min": 90,
+      "plage_normale_max": 120
+    },
+    {
+      "id_parametre": 5,
+      "code": "FR",
+      "libelle": "Fréquence respiratoire",
+      "unite": "resp/min",
+      "plage_normale_min": 12,
+      "plage_normale_max": 20
+    },
+    {
+      "id_parametre": 6,
+      "code": "SOMMEIL",
+      "libelle": "Durée de sommeil",
+      "unite": "h",
+      "plage_normale_min": 6,
+      "plage_normale_max": 9
+    },
+    {
+      "id_parametre": 7,
+      "code": "RADIATION",
+      "libelle": "Dose de radiations",
+      "unite": "mSv/jour",
+      "plage_normale_min": 0,
+      "plage_normale_max": 0.8
+    },
+    {
+      "id_parametre": 8,
+      "code": "EXERCICE",
+      "libelle": "Durée d'exercice physique",
+      "unite": "min/jour",
+      "plage_normale_min": 120,
+      "plage_normale_max": 150
+    },
+    {
+      "id_parametre": 9,
+      "code": "GLYCEMIE",
+      "libelle": "Glycémie",
+      "unite": "mg/dL",
+      "plage_normale_min": 70,
+      "plage_normale_max": 100
+    },
+    {
+      "id_parametre": 10,
+      "code": "HUMEUR",
+      "libelle": "Humeur (score de 1 à 5)",
+      "unite": "score",
+      "plage_normale_min": 3,
+      "plage_normale_max": 5
+    }
+  ],
+  "seuil": [
+    {
+      "id_seuil": 1,
+      "id_parametre": 1,
+      "id_astronaute": null,
+      "seuil_min": 50,
+      "seuil_max": 120,
+      "seuil_secondaire_max": null,
+      "niveau": "attention",
+      "modifie_par": null,
+      "date_modification": "2026-11-07T08:00:00"
+    },
+    {
+      "id_seuil": 2,
+      "id_parametre": 1,
+      "id_astronaute": null,
+      "seuil_min": 40,
+      "seuil_max": 140,
+      "seuil_secondaire_max": null,
+      "niveau": "critique",
+      "modifie_par": null,
+      "date_modification": "2026-11-07T08:00:00"
+    },
+    {
+      "id_seuil": 3,
+      "id_parametre": 2,
+      "id_astronaute": null,
+      "seuil_min": 92,
+      "seuil_max": 100,
+      "seuil_secondaire_max": null,
+      "niveau": "attention",
+      "modifie_par": null,
+      "date_modification": "2026-11-07T08:00:00"
+    },
+    {
+      "id_seuil": 4,
+      "id_parametre": 2,
+      "id_astronaute": null,
+      "seuil_min": 88,
+      "seuil_max": 100,
+      "seuil_secondaire_max": null,
+      "niveau": "critique",
+      "modifie_par": null,
+      "date_modification": "2026-11-07T08:00:00"
+    },
+    {
+      "id_seuil": 5,
+      "id_parametre": 3,
+      "id_astronaute": null,
+      "seuil_min": 35,
+      "seuil_max": 38,
+      "seuil_secondaire_max": null,
+      "niveau": "attention",
+      "modifie_par": null,
+      "date_modification": "2026-11-07T08:00:00"
+    },
+    {
+      "id_seuil": 6,
+      "id_parametre": 3,
+      "id_astronaute": null,
+      "seuil_min": 34,
+      "seuil_max": 39,
+      "seuil_secondaire_max": null,
+      "niveau": "critique",
+      "modifie_par": null,
+      "date_modification": "2026-11-07T08:00:00"
+    },
+    {
+      "id_seuil": 7,
+      "id_parametre": 4,
+      "id_astronaute": null,
+      "seuil_min": null,
+      "seuil_max": 140,
+      "seuil_secondaire_max": 90,
+      "niveau": "attention",
+      "modifie_par": null,
+      "date_modification": "2026-11-07T08:00:00"
+    },
+    {
+      "id_seuil": 8,
+      "id_parametre": 4,
+      "id_astronaute": null,
+      "seuil_min": null,
+      "seuil_max": 180,
+      "seuil_secondaire_max": 120,
+      "niveau": "critique",
+      "modifie_par": null,
+      "date_modification": "2026-11-07T08:00:00"
+    },
+    {
+      "id_seuil": 9,
+      "id_parametre": 5,
+      "id_astronaute": null,
+      "seuil_min": 10,
+      "seuil_max": 25,
+      "seuil_secondaire_max": null,
+      "niveau": "attention",
+      "modifie_par": null,
+      "date_modification": "2026-11-07T08:00:00"
+    },
+    {
+      "id_seuil": 10,
+      "id_parametre": 5,
+      "id_astronaute": null,
+      "seuil_min": 8,
+      "seuil_max": 30,
+      "seuil_secondaire_max": null,
+      "niveau": "critique",
+      "modifie_par": null,
+      "date_modification": "2026-11-07T08:00:00"
+    },
+    {
+      "id_seuil": 11,
+      "id_parametre": 6,
+      "id_astronaute": null,
+      "seuil_min": 5,
+      "seuil_max": null,
+      "seuil_secondaire_max": null,
+      "niveau": "attention",
+      "modifie_par": null,
+      "date_modification": "2026-11-07T08:00:00"
+    },
+    {
+      "id_seuil": 12,
+      "id_parametre": 6,
+      "id_astronaute": null,
+      "seuil_min": 4,
+      "seuil_max": null,
+      "seuil_secondaire_max": null,
+      "niveau": "critique",
+      "modifie_par": null,
+      "date_modification": "2026-11-07T08:00:00"
+    },
+    {
+      "id_seuil": 13,
+      "id_parametre": 7,
+      "id_astronaute": null,
+      "seuil_min": 0,
+      "seuil_max": 1,
+      "seuil_secondaire_max": null,
+      "niveau": "attention",
+      "modifie_par": null,
+      "date_modification": "2026-11-07T08:00:00"
+    },
+    {
+      "id_seuil": 14,
+      "id_parametre": 7,
+      "id_astronaute": null,
+      "seuil_min": 0,
+      "seuil_max": 2,
+      "seuil_secondaire_max": null,
+      "niveau": "critique",
+      "modifie_par": null,
+      "date_modification": "2026-11-07T08:00:00"
+    },
+    {
+      "id_seuil": 15,
+      "id_parametre": 8,
+      "id_astronaute": null,
+      "seuil_min": 30,
+      "seuil_max": 300,
+      "seuil_secondaire_max": null,
+      "niveau": "attention",
+      "modifie_par": null,
+      "date_modification": "2026-11-07T08:00:00"
+    },
+    {
+      "id_seuil": 16,
+      "id_parametre": 9,
+      "id_astronaute": null,
+      "seuil_min": 65,
+      "seuil_max": 140,
+      "seuil_secondaire_max": null,
+      "niveau": "attention",
+      "modifie_par": null,
+      "date_modification": "2026-11-07T08:00:00"
+    },
+    {
+      "id_seuil": 17,
+      "id_parametre": 9,
+      "id_astronaute": null,
+      "seuil_min": 54,
+      "seuil_max": 250,
+      "seuil_secondaire_max": null,
+      "niveau": "critique",
+      "modifie_par": null,
+      "date_modification": "2026-11-07T08:00:00"
+    },
+    {
+      "id_seuil": 18,
+      "id_parametre": 10,
+      "id_astronaute": null,
+      "seuil_min": 2.5,
+      "seuil_max": 5,
+      "seuil_secondaire_max": null,
+      "niveau": "attention",
+      "modifie_par": null,
+      "date_modification": "2026-11-07T08:00:00"
+    },
+    {
+      "id_seuil": 19,
+      "id_parametre": 10,
+      "id_astronaute": null,
+      "seuil_min": 1.5,
+      "seuil_max": 5,
+      "seuil_secondaire_max": null,
+      "niveau": "critique",
+      "modifie_par": null,
+      "date_modification": "2026-11-07T08:00:00"
+    },
+    {
+      "id_seuil": 20,
+      "id_parametre": 1,
+      "id_astronaute": 1,
+      "seuil_min": 50,
+      "seuil_max": 110,
+      "seuil_secondaire_max": null,
+      "niveau": "attention",
+      "modifie_par": 5,
+      "date_modification": "2026-11-05T10:15:00"
+    }
+  ],
+  "ligne_de_base": [
+    {
+      "id_ligne_base": 1,
+      "id_astronaute": 1,
+      "id_parametre": 1,
+      "moyenne": 72.0,
+      "ecart_type": 5.0,
+      "date_calcul": "2026-11-06T23:00:00"
+    },
+    {
+      "id_ligne_base": 2,
+      "id_astronaute": 1,
+      "id_parametre": 2,
+      "moyenne": 98.0,
+      "ecart_type": 0.8,
+      "date_calcul": "2026-11-06T23:00:00"
+    }
+  ],
+  "mesure": [
+    {
+      "id_mesure": "f38b2ffc-80a4-4f5a-91c9-bc701e7ea419",
+      "id_astronaute": 1,
+      "id_parametre": 1,
+      "valeur": 72,
+      "valeur_secondaire": null,
+      "horodatage": "2026-11-07T08:00:00",
+      "source": "simulateur",
+      "synchronisee": true
+    },
+    {
+      "id_mesure": "f3f49249-dc28-4f90-a5ae-c7978306d03b",
+      "id_astronaute": 1,
+      "id_parametre": 2,
+      "valeur": 98,
+      "valeur_secondaire": null,
+      "horodatage": "2026-11-07T08:00:00",
+      "source": "simulateur",
+      "synchronisee": true
+    },
+    {
+      "id_mesure": "e5121482-3929-4d22-a255-accb1a466884",
+      "id_astronaute": 1,
+      "id_parametre": 4,
+      "valeur": 118,
+      "valeur_secondaire": 76,
+      "horodatage": "2026-11-07T08:00:00",
+      "source": "simulateur",
+      "synchronisee": true
+    },
+    {
+      "id_mesure": "6bad6be2-8e7a-46e9-9f19-950499dd251d",
+      "id_astronaute": 1,
+      "id_parametre": 7,
+      "valeur": 0.45,
+      "valeur_secondaire": null,
+      "horodatage": "2026-11-07T12:00:00",
+      "source": "simulateur",
+      "synchronisee": true
+    },
+    {
+      "id_mesure": "d7a7a3cc-8c3d-4f16-9293-de8fc88b2875",
+      "id_astronaute": 1,
+      "id_parametre": 1,
+      "valeur": 108,
+      "valeur_secondaire": null,
+      "horodatage": "2026-11-07T14:30:00",
+      "source": "simulateur",
+      "synchronisee": true
+    },
+    {
+      "id_mesure": "7dabe929-c4a3-44bf-86cd-75e9bb049a79",
+      "id_astronaute": 1,
+      "id_parametre": 3,
+      "valeur": 36.9,
+      "valeur_secondaire": null,
+      "horodatage": "2026-11-07T14:30:00",
+      "source": "simulateur",
+      "synchronisee": true
+    },
+    {
+      "id_mesure": "70eb9a0a-9626-4ae6-85e8-18fac0433cbd",
+      "id_astronaute": 1,
+      "id_parametre": 2,
+      "valeur": 91,
+      "valeur_secondaire": null,
+      "horodatage": "2026-11-07T14:32:00",
+      "source": "simulateur",
+      "synchronisee": true
+    },
+    {
+      "id_mesure": "14aa4e71-9d3c-4dec-80a6-1f933d6c51e3",
+      "id_astronaute": 1,
+      "id_parametre": 2,
+      "valeur": 93,
+      "valeur_secondaire": null,
+      "horodatage": "2026-11-07T14:40:00",
+      "source": "saisie manuelle",
+      "synchronisee": false
+    },
+    {
+      "id_mesure": "1919e93a-d117-45ad-8988-93101c593af5",
+      "id_astronaute": 2,
+      "id_parametre": 6,
+      "valeur": 4.5,
+      "valeur_secondaire": null,
+      "horodatage": "2026-11-07T14:10:00",
+      "source": "simulateur",
+      "synchronisee": true
+    },
+    {
+      "id_mesure": "e4163207-d094-4996-82f0-ee99731c9452",
+      "id_astronaute": 2,
+      "id_parametre": 1,
+      "valeur": 76,
+      "valeur_secondaire": null,
+      "horodatage": "2026-11-07T14:30:00",
+      "source": "simulateur",
+      "synchronisee": true
+    },
+    {
+      "id_mesure": "5071950e-adec-4f11-bd83-6e77af67d461",
+      "id_astronaute": 2,
+      "id_parametre": 2,
+      "valeur": 97,
+      "valeur_secondaire": null,
+      "horodatage": "2026-11-07T14:30:00",
+      "source": "simulateur",
+      "synchronisee": true
+    },
+    {
+      "id_mesure": "59001ac9-4063-49bc-a5b0-0a2d35d14880",
+      "id_astronaute": 2,
+      "id_parametre": 3,
+      "valeur": 36.7,
+      "valeur_secondaire": null,
+      "horodatage": "2026-11-07T14:30:00",
+      "source": "simulateur",
+      "synchronisee": true
+    },
+    {
+      "id_mesure": "5b4c8012-ede7-4d0c-bfb8-8309fadb8908",
+      "id_astronaute": 3,
+      "id_parametre": 1,
+      "valeur": 69,
+      "valeur_secondaire": null,
+      "horodatage": "2026-11-07T14:30:00",
+      "source": "simulateur",
+      "synchronisee": true
+    },
+    {
+      "id_mesure": "bef7e268-ffe9-46ab-a058-1ccace1d62e0",
+      "id_astronaute": 3,
+      "id_parametre": 2,
+      "valeur": 99,
+      "valeur_secondaire": null,
+      "horodatage": "2026-11-07T14:30:00",
+      "source": "simulateur",
+      "synchronisee": true
+    },
+    {
+      "id_mesure": "b91dddd9-1389-4372-a341-738c837a7935",
+      "id_astronaute": 3,
+      "id_parametre": 3,
+      "valeur": 36.6,
+      "valeur_secondaire": null,
+      "horodatage": "2026-11-07T14:30:00",
+      "source": "simulateur",
+      "synchronisee": true
+    },
+    {
+      "id_mesure": "89be9c1c-8eb5-440f-96f4-488157241955",
+      "id_astronaute": 4,
+      "id_parametre": 1,
+      "valeur": 73,
+      "valeur_secondaire": null,
+      "horodatage": "2026-11-07T14:30:00",
+      "source": "simulateur",
+      "synchronisee": true
+    },
+    {
+      "id_mesure": "24114258-751b-4c83-89a0-47dc4ac87fc0",
+      "id_astronaute": 4,
+      "id_parametre": 2,
+      "valeur": 98,
+      "valeur_secondaire": null,
+      "horodatage": "2026-11-07T14:30:00",
+      "source": "simulateur",
+      "synchronisee": true
+    },
+    {
+      "id_mesure": "b766ff10-b437-4db5-a511-49bbe060a724",
+      "id_astronaute": 4,
+      "id_parametre": 3,
+      "valeur": 36.8,
+      "valeur_secondaire": null,
+      "horodatage": "2026-11-07T14:30:00",
+      "source": "simulateur",
+      "synchronisee": true
+    },
+    {
+      "id_mesure": "d9090b89-0655-4096-8f1a-8a1d93d20470",
+      "id_astronaute": 1,
+      "id_parametre": 2,
+      "valeur": 86,
+      "valeur_secondaire": null,
+      "horodatage": "2026-11-06T22:10:00",
+      "source": "simulateur",
+      "synchronisee": true
+    }
+  ],
+  "alerte": [
+    {
+      "id_alerte": "7608d942-5d11-4a9d-9e6c-9992b5fb12e0",
+      "id_astronaute": 1,
+      "id_mesure": "70eb9a0a-9626-4ae6-85e8-18fac0433cbd",
+      "niveau": "attention",
+      "message": "SpO2 basse : 91 % (seuil d'alerte : moins de 92 %).",
+      "date_creation": "2026-11-07T14:32:00",
+      "statut": "active",
+      "acquittee_par": null,
+      "synchronisee": true
+    },
+    {
+      "id_alerte": "e41686cd-6616-4227-9737-14726c167229",
+      "id_astronaute": 2,
+      "id_mesure": "1919e93a-d117-45ad-8988-93101c593af5",
+      "niveau": "attention",
+      "message": "Sommeil insuffisant : 4,5 h (seuil d'alerte : moins de 5 h).",
+      "date_creation": "2026-11-07T14:10:00",
+      "statut": "active",
+      "acquittee_par": null,
+      "synchronisee": true
+    },
+    {
+      "id_alerte": "de0279e1-7f9a-4098-8df0-5f2595f19a51",
+      "id_astronaute": 1,
+      "id_mesure": "d9090b89-0655-4096-8f1a-8a1d93d20470",
+      "niveau": "critique",
+      "message": "SpO2 critique : 86 % (seuil critique : moins de 88 %).",
+      "date_creation": "2026-11-06T22:10:00",
+      "statut": "resolue",
+      "acquittee_par": 5,
+      "synchronisee": true
+    }
+  ],
+  "recommandation": [
+    {
+      "id_recommandation": "cd73de00-81a0-4a05-ace9-da661dcf884c",
+      "id_alerte": "7608d942-5d11-4a9d-9e6c-9992b5fb12e0",
+      "texte": "Refaites une mesure de SpO2 dans 10 minutes.",
+      "type": "nouvelle mesure",
+      "synchronisee": true
+    },
+    {
+      "id_recommandation": "e01c683e-99a4-4df0-9de3-a361c0099eba",
+      "id_alerte": "7608d942-5d11-4a9d-9e6c-9992b5fb12e0",
+      "texte": "Si la SpO2 reste sous 92 %, contactez le médecin au sol.",
+      "type": "contact medecin",
+      "synchronisee": true
+    },
+    {
+      "id_recommandation": "864fa3f3-eab0-4e9b-a5ed-0de47db4304d",
+      "id_alerte": "e41686cd-6616-4227-9737-14726c167229",
+      "texte": "Prévoyez une période de repos et un coucher plus tôt ce soir.",
+      "type": "repos",
+      "synchronisee": true
+    },
+    {
+      "id_recommandation": "90624fe3-6b82-46c9-982f-b0f1423674a6",
+      "id_alerte": "de0279e1-7f9a-4098-8df0-5f2595f19a51",
+      "texte": "Contactez immédiatement le médecin au sol.",
+      "type": "contact medecin",
+      "synchronisee": true
+    }
+  ],
+  "ressenti": [
+    {
+      "id_ressenti": "8350a73f-7aac-419f-bb75-9e0fed1d9d16",
+      "id_astronaute": 1,
+      "type": "fatigue",
+      "niveau": 3,
+      "commentaire": "Légère fatigue après la séance d'exercice.",
+      "horodatage": "2026-11-07T13:00:00",
+      "synchronisee": true
+    },
+    {
+      "id_ressenti": "93550840-067f-4cfc-8e1f-d3d9849acfb5",
+      "id_astronaute": 2,
+      "type": "humeur",
+      "niveau": 2,
+      "commentaire": "Nuit courte, humeur basse.",
+      "horodatage": "2026-11-07T14:15:00",
+      "synchronisee": true
+    }
+  ],
+  "message_ia": [
+    {
+      "id_message": "d1711cbd-2106-419e-840d-31b5397a7623",
+      "id_astronaute": 1,
+      "id_alerte": "7608d942-5d11-4a9d-9e6c-9992b5fb12e0",
+      "role_message": "utilisateur",
+      "contenu": "Pourquoi ma SpO2 est-elle basse ?",
+      "horodatage": "2026-11-07T14:35:00",
+      "mode": "IA",
+      "synchronisee": true
+    },
+    {
+      "id_message": "85f184e0-b464-4554-b675-299b0c83e786",
+      "id_astronaute": 1,
+      "id_alerte": "7608d942-5d11-4a9d-9e6c-9992b5fb12e0",
+      "role_message": "assistant",
+      "contenu": "Votre SpO2 est de 91 %, sous le seuil d'alerte de 92 %. Je ne peux pas poser de diagnostic. Refaites une mesure dans 10 minutes. Si elle reste basse, contactez le médecin au sol. Je ne remplace pas un médecin.",
+      "horodatage": "2026-11-07T14:35:00",
+      "mode": "IA",
+      "synchronisee": true
+    },
+    {
+      "id_message": "b7a1774f-1a42-421e-aba4-c70ee306f0c4",
+      "id_astronaute": 2,
+      "id_alerte": "e41686cd-6616-4227-9737-14726c167229",
+      "role_message": "utilisateur",
+      "contenu": "Pourquoi ai-je une alerte de sommeil ?",
+      "horodatage": "2026-11-07T14:20:00",
+      "mode": "secours",
+      "synchronisee": true
+    },
+    {
+      "id_message": "2475263c-7854-4014-aded-c86a9f4fb02b",
+      "id_astronaute": 2,
+      "id_alerte": "e41686cd-6616-4227-9737-14726c167229",
+      "role_message": "assistant",
+      "contenu": "Réponse prédéfinie (mode de secours) : l'alerte de sommeil se déclenche sous 5 heures par nuit. Essayez de vous reposer. Je ne remplace pas un médecin.",
+      "horodatage": "2026-11-07T14:20:00",
+      "mode": "secours",
+      "synchronisee": true
+    }
+  ],
+  "rapport": [
+    {
+      "id_rapport": 1,
+      "id_astronaute": null,
+      "type": "quotidien",
+      "periode_debut": "2026-11-07",
+      "periode_fin": "2026-11-07",
+      "contenu": "Équipage Artemis-X, jour 42 : 2 alertes d'attention (SpO2 basse pour Alex Moreau, sommeil insuffisant pour Sara Khan). Les autres paramètres sont dans la plage normale.",
+      "date_generation": "2026-11-07T18:00:00"
+    },
+    {
+      "id_rapport": 2,
+      "id_astronaute": 1,
+      "type": "hebdomadaire",
+      "periode_debut": "2026-11-01",
+      "periode_fin": "2026-11-07",
+      "contenu": "Semaine du 1er au 7 novembre : fréquence cardiaque stable autour de 72 bpm, deux baisses de SpO2 : 86 % le 6 novembre (alerte résolue) et 91 % le 7 novembre.",
+      "date_generation": "2026-11-07T18:05:00"
+    }
+  ]
+}
