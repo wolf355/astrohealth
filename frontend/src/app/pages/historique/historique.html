@@ -1,0 +1,99 @@
+<div class="layout">
+  <aside class="sidebar">
+    <div>
+      <h2>AstroHealth</h2>
+      <nav>
+        <a routerLink="/medecin">Crew Overview</a>
+        <a class="actif">History</a>
+      </nav>
+    </div>
+
+    <div class="utilisateur">
+      <strong>{{ medecin }}</strong>
+      <span>Ground doctor</span>
+      <a routerLink="/">Change profile</a>
+    </div>
+  </aside>
+
+  <main class="contenu">
+    <header class="barre">
+      <div>
+        <h1>History</h1>
+        <p class="sous-titre">Mission {{ mission }} - Measurements over time</p>
+      </div>
+      <span class="maj">Last update: {{ derniereMaj() }}</span>
+    </header>
+
+    @if (erreur() !== '') {
+      <div class="bandeau">{{ erreur() }}</div>
+    }
+
+    <section class="filtres">
+      <label>
+        Astronaut
+        <select #selAstro (change)="changerAstronaute(selAstro.value)">
+          @for (a of astronautes(); track a.id_astronaute) {
+            <option [value]="a.id_astronaute">{{ a.nom_code }}</option>
+          }
+        </select>
+      </label>
+
+      <label>
+        Parameter
+        <select #selParam (change)="changerParametre(selParam.value)">
+          @for (p of parametres(); track p.code) {
+            <option [value]="p.code" [selected]="p.code === codeParametre()">{{ p.libelle }}</option>
+          }
+        </select>
+      </label>
+
+      <div class="periodes">
+        @for (p of periodes; track p.code) {
+          <button [class.actif]="periodeActive() === p.code" (click)="changerPeriode(p.code)">{{ p.label }}</button>
+        }
+      </div>
+
+      <button class="bouton-actualiser" (click)="actualiser()">Refresh</button>
+      @if (chargement()) {
+        <span class="chargement">Loading...</span>
+      }
+    </section>
+
+    <section class="carte-bloc">
+      <h3>{{ titre() }}</h3>
+      <div class="zone-graphique">
+        <canvas #canvasGraphique></canvas>
+      </div>
+    </section>
+
+    <section class="carte-bloc">
+      <h3>Measurements</h3>
+      <div class="zone-tableau">
+        <table>
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Value ({{ unite() }})</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (l of lignes(); track $index) {
+              <tr>
+                <td>{{ l.heure }}</td>
+                <td>{{ l.valeur }}</td>
+                <td><span [class]="'badge ' + l.etat">{{ l.etat === 'attention' ? 'out of range' : 'normal' }}</span></td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="3">No measurements for this selection</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <p class="avertissement">Prototype for demonstration purposes only. Not a medical device.</p>
+  </main>
+</div>
