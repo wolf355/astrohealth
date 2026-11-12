@@ -6,6 +6,7 @@ import parametresRouter from './routes/parametres.js';
 import astronautesRouter from './routes/astronautes.js';
 import alertesRouter from './routes/alertes.js';
 import mesuresRouter from './routes/mesures.js';
+import assistantRouter from './routes/assistant.js';
 
 
 dotenv.config();
@@ -20,6 +21,7 @@ app.use('/api/parametres' , parametresRouter);
 app.use('/api/astronautes', astronautesRouter);
 app.use ('/api/alertes' , alertesRouter);
 app.use('/api/mesures', mesuresRouter);
+app.use('/api/assistant', assistantRouter);
 //test route 
 app.get('/' , (req, res)=>{
     res.send('astrohealth API is running!');
