@@ -11,7 +11,7 @@
     </div>
 
     <div class="utilisateur">
-      <strong>{{ nom }}</strong>
+      <strong>{{ nom() }}</strong>
       <span>Mission {{ mission }}</span>
       <a routerLink="/">Change profile</a>
     </div>
@@ -22,49 +22,55 @@
       <h1>My Health</h1>
       <div class="infos">
         <span>Day {{ jour }}</span>
-        <span><span class="point"></span>Ground link: Online</span>
-        <span class="cloche">🔔 @if (enAlerte) { <span class="pastille">1</span> }</span>
-        <button class="bouton-demo" (click)="basculer()">
-          {{ enAlerte ? 'Back to normal' : 'Simulate alert' }}
-        </button>
+        <span>
+          <span class="point" [class.hors-ligne]="!lienEnLigne()"></span>
+          Ground link: {{ lienEnLigne() ? 'Online' : 'Offline' }}
+        </span>
+        <span class="cloche">🔔 @if (nombreAlertes() > 0) { <span class="pastille">{{ nombreAlertes() }}</span> }</span>
+        <span class="maj">Last update: {{ derniereMaj() }}</span>
       </div>
     </header>
 
-    @if (enAlerte) {
-      <div [class]="'bandeau ' + niveauAlerte">
-        <strong>Alert:</strong> {{ messageAlerte }}
+    @if (alerteActive(); as alerte) {
+      <div [class]="'bandeau ' + alerte.niveau">
+        <strong>Alert:</strong> {{ alerte.message }}
       </div>
     }
 
     <section class="cartes">
-      @for (m of mesures; track m.label) {
-        <div [class]="'carte-mesure ' + m.etat">
-          <p class="label">{{ m.label }}</p>
-          <p class="valeur">{{ m.valeur }} <span class="unite">{{ m.unite }}</span></p>
-          <span [class]="'badge ' + m.etat">{{ m.etat }}</span>
+      @for (c of cartes(); track c.code) {
+        <div [class]="'carte-mesure ' + c.etat">
+          <p class="label">{{ c.label }}</p>
+          <p class="valeur">
+            {{ c.valeur !== null ? c.valeur : '—' }}
+            @if (c.valeur !== null) {
+              <span class="unite">{{ c.unite }}</span>
+            }
+          </p>
+          <span [class]="'badge ' + c.etat">{{ c.etat === 'aucune' ? 'no data' : c.etat }}</span>
         </div>
       }
     </section>
 
     <section class="graphiques">
       <div class="carte-graphique">
-        <h3>Heart rate - last 6 hours</h3>
+        <h3>Heart rate - latest measurements</h3>
         <div class="zone-graphique">
           <canvas #graphiqueFc></canvas>
         </div>
       </div>
 
       <div class="carte-graphique">
-        <h3>SpO2 - last 6 hours</h3>
+        <h3>SpO2 - latest measurements</h3>
         <div class="zone-graphique">
           <canvas #graphiqueSpo2></canvas>
         </div>
       </div>
     </section>
 
-    <section [class]="'carte-reco ' + (enAlerte ? niveauAlerte : 'normal')">
+    <section [class]="'carte-reco ' + niveauReco()">
       <h3>Recommendations</h3>
-      <p>{{ recommandation }}</p>
+      <p>{{ recommandation() }}</p>
     </section>
 
     <p class="avertissement">AI assistant is not a substitute for a doctor.</p>
