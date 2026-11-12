@@ -320,3 +320,20 @@ td {
   font-size: 14px;
   line-height: 1.5;
 }
+
+.point.hors-ligne {
+  background: var(--rouge);
+}
+
+.maj {
+  font-size: 12px;
+}
+
+.fonction {
+  text-transform: capitalize;
+}
+
+.message-alerte {
+  font-size: 13px;
+  color: var(--texte-secondaire);
+}

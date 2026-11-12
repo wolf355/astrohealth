@@ -24,14 +24,18 @@
         <p class="sous-titre">Mission {{ mission }} - Day {{ jour }}</p>
       </div>
       <div class="infos">
-        <span><span class="point"></span>Ground link: Online</span>
-        <span>🔔 <span class="pastille">{{ alertes.length }}</span></span>
-        <button class="bouton-resume" (click)="ouvrirFermerResume()">Ask AI for a weekly summary</button>
+        <span>
+          <span class="point" [class.hors-ligne]="!lienEnLigne()"></span>
+          Ground link: {{ lienEnLigne() ? 'Online' : 'Offline' }}
+        </span>
+        <span>🔔 @if (alertes().length > 0) { <span class="pastille">{{ alertes().length }}</span> }</span>
+        <span class="maj">Last update: {{ derniereMaj() }}</span>
+        <button class="bouton-resume" (click)="ouvrirFermerResume()">Crew summary</button>
       </div>
     </header>
 
     <section class="equipage">
-      @for (a of equipage; track a.nom) {
+      @for (a of equipage(); track a.id) {
         <div [class]="'carte-astro ' + a.etat">
           <div class="entete-astro">
             <div class="avatar">{{ a.initiales }}</div>
@@ -44,9 +48,18 @@
           <span [class]="'badge ' + a.etat">{{ a.etat }}</span>
 
           <div class="valeurs">
-            <div><span class="petit">Heart rate</span><strong>{{ a.fc }} bpm</strong></div>
-            <div><span class="petit">SpO2</span><strong>{{ a.spo2 }} %</strong></div>
-            <div><span class="petit">Temp.</span><strong>{{ a.temp }} °C</strong></div>
+            <div>
+              <span class="petit">Heart rate</span>
+              <strong>{{ a.fc !== null ? a.fc + ' bpm' : '—' }}</strong>
+            </div>
+            <div>
+              <span class="petit">SpO2</span>
+              <strong>{{ a.spo2 !== null ? a.spo2 + ' %' : '—' }}</strong>
+            </div>
+            <div>
+              <span class="petit">Temp.</span>
+              <strong>{{ a.temp !== null ? a.temp + ' °C' : '—' }}</strong>
+            </div>
           </div>
         </div>
       }
@@ -60,19 +73,21 @@
             <tr>
               <th>Time</th>
               <th>Astronaut</th>
-              <th>Parameter</th>
-              <th>Value</th>
-              <th>Status</th>
+              <th>Level</th>
+              <th>Message</th>
             </tr>
           </thead>
           <tbody>
-            @for (al of alertes; track al.heure) {
+            @for (al of alertes(); track al.id_alerte) {
               <tr>
-                <td>{{ al.heure }}</td>
-                <td>{{ al.astronaute }}</td>
-                <td>{{ al.parametre }}</td>
-                <td>{{ al.valeur }}</td>
-                <td><span [class]="'badge ' + al.etat">{{ al.etat }}</span></td>
+                <td>{{ formaterAlerte(al.date_creation) }}</td>
+                <td>{{ al.nom_code }}</td>
+                <td><span [class]="'badge ' + al.niveau">{{ al.niveau }}</span></td>
+                <td class="message-alerte">{{ al.message }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="4">No active alerts</td>
               </tr>
             }
           </tbody>
@@ -81,16 +96,16 @@
 
       <div class="carte-bloc">
         <div class="titre-graphique">
-          <h3>Crew average</h3>
+          <h3>Crew trends - {{ titreGraphique() }}</h3>
           <div class="controles">
             <select #selecteur (change)="changerParametre(selecteur.value)">
-              <option value="fc">Heart rate</option>
-              <option value="spo2">SpO2</option>
-              <option value="temp">Temperature</option>
+              @for (p of parametresDisponibles; track p.code) {
+                <option [value]="p.code">{{ p.label }}</option>
+              }
             </select>
-            <button [class.actif]="periodeActive === '6h'" (click)="changerPeriode('6h')">6h</button>
-            <button [class.actif]="periodeActive === '24h'" (click)="changerPeriode('24h')">24h</button>
-            <button [class.actif]="periodeActive === '7d'" (click)="changerPeriode('7d')">7 days</button>
+            @for (p of periodes; track p.code) {
+              <button [class.actif]="periodeActive() === p.code" (click)="changerPeriode(p.code)">{{ p.label }}</button>
+            }
           </div>
         </div>
         <div class="zone-graphique">
@@ -105,13 +120,13 @@
   @if (resumeOuvert) {
     <div class="panneau-resume">
       <div class="resume-titre">
-        <span>AI weekly summary</span>
+        <span>Crew summary</span>
         <button (click)="ouvrirFermerResume()">✕</button>
       </div>
       <div class="resume-avertissement">
         Not a medical diagnosis. Always rely on the medical team's judgement.
       </div>
-      <p class="resume-texte">{{ resume }}</p>
+      <p class="resume-texte">{{ resume() }}</p>
     </div>
   }
 </div>
