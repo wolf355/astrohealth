@@ -1,0 +1,198 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 240px;
+  box-sizing: border-box;
+  padding: 24px 16px;
+  background: var(--carte);
+  border-right: 1px solid var(--bordure);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+nav a {
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: var(--texte-secondaire);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+nav a.actif {
+  background: var(--accent);
+  color: white;
+}
+
+.utilisateur {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--texte-secondaire);
+}
+
+.utilisateur a {
+  margin-top: 8px;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.contenu {
+  flex: 1;
+  padding: 24px 32px;
+}
+
+.barre {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.barre h1 {
+  margin: 0;
+}
+
+.sous-titre {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--texte-secondaire);
+}
+
+.maj {
+  font-size: 12px;
+  color: var(--texte-secondaire);
+}
+
+.bandeau {
+  margin-bottom: 16px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid var(--rouge);
+  color: var(--rouge);
+}
+
+.filtres {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.filtres label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--texte-secondaire);
+}
+
+.filtres select,
+.filtres button {
+  padding: 8px 12px;
+  border: 1px solid var(--bordure);
+  border-radius: 8px;
+  background: var(--carte);
+  color: var(--texte);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.periodes {
+  display: flex;
+  gap: 6px;
+}
+
+.periodes button.actif {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.bouton-actualiser {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.chargement {
+  font-size: 13px;
+  color: var(--texte-secondaire);
+}
+
+.carte-bloc {
+  margin-bottom: 20px;
+  padding: 20px;
+  background: var(--carte);
+  border: 1px solid var(--bordure);
+  border-radius: 12px;
+}
+
+.carte-bloc h3 {
+  margin: 0 0 16px;
+}
+
+.zone-graphique {
+  position: relative;
+  height: 320px;
+}
+
+.zone-tableau {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th {
+  text-align: left;
+  padding: 8px 6px;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--texte-secondaire);
+  border-bottom: 1px solid var(--bordure);
+}
+
+td {
+  padding: 10px 6px;
+  border-bottom: 1px solid var(--bordure);
+}
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+
+.badge.normal {
+  background: rgba(34, 197, 94, 0.15);
+  color: var(--vert);
+}
+
+.badge.attention {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--orange);
+}
+
+.avertissement {
+  margin-top: 24px;
+  font-size: 12px;
+  color: var(--texte-secondaire);
+}
