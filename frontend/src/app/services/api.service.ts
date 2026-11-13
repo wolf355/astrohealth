@@ -33,6 +33,11 @@ export interface Alerte {
   date_creation: string;
   statut: string;
 }
+export interface ReponseAssistant {
+  reponse: string;
+  mode: string;
+  id_message: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -73,6 +78,13 @@ export class ApiService {
 
   getAlertes(statut: string): Observable<Alerte[]> {
     return this.http.get<Alerte[]>(this.adresse + '/alertes', { params: { statut } });
+  }
+
+    envoyerQuestion(idAstronaute: number, question: string): Observable<ReponseAssistant> {
+    return this.http.post<ReponseAssistant>(this.adresse + '/assistant/chat', {
+      id_astronaute: idAstronaute,
+      question: question
+    });
   }
 
   private convertirMesure(m: any): MesureRecente {
