@@ -79,11 +79,12 @@ export async function appelerIA(messages) {
 
 /**
  * Builds the prompt context according to rule BNF11:
- * ONLY vital signs (code, value, secondary value, unit, timestamp) and active alerts (level, message, timestamp).
+ * ONLY vital signs (code, value, secondary value, unit, normal range, timestamp),
+ * active alerts (level, message, timestamp), and recent trends for alerted parameters (last 5 values).
  * NEVER includes name, email, age, or any personal identifying info.
  */
-function construireContexte(mesures, alertes) {
-  let context = 'VITAL SIGNS MEASUREMENTS:\n';
+function construireContexte(mesures, alertes, historiqueParametresAlerte = {}) {
+  let context = 'VITAL SIGNS MEASUREMENTS (Latest values & normal ranges):\n';
   if (mesures.length === 0) {
     context += 'No recent measurements recorded.\n';
   } else {
@@ -91,7 +92,10 @@ function construireContexte(mesures, alertes) {
       const dateStr = m.horodatage ? new Date(m.horodatage).toISOString().replace('T', ' ').slice(0, 19) : 'N/A';
       const secVal = m.valeur_secondaire != null ? ` / ${m.valeur_secondaire}` : '';
       const unit = m.unite ? ` ${m.unite}` : '';
-      context += `- ${m.code}: ${m.valeur}${secVal}${unit} (${dateStr})\n`;
+      const normalRange = (m.plage_normale_min != null && m.plage_normale_max != null)
+        ? ` [Normal range: ${m.plage_normale_min} - ${m.plage_normale_max}${unit}]`
+        : '';
+      context += `- ${m.code} (${m.libelle || m.code}): ${m.valeur}${secVal}${unit}${normalRange} recorded at ${dateStr}\n`;
     }
   }
 
@@ -102,6 +106,18 @@ function construireContexte(mesures, alertes) {
     for (const a of alertes) {
       const dateStr = a.date_creation ? new Date(a.date_creation).toISOString().replace('T', ' ').slice(0, 19) : 'N/A';
       context += `- [${a.niveau.toUpperCase()}] ${a.message} (${dateStr})\n`;
+
+      const paramCode = a.code_parametre;
+      if (paramCode && historiqueParametresAlerte[paramCode] && historiqueParametresAlerte[paramCode].length > 0) {
+        const hist = historiqueParametresAlerte[paramCode];
+        const unit = a.unite ? ` ${a.unite}` : '';
+        const histStr = hist.map(h => {
+          const t = h.horodatage ? new Date(h.horodatage).toISOString().replace('T', ' ').slice(11, 19) : '';
+          const sec = h.valeur_secondaire != null ? `/${h.valeur_secondaire}` : '';
+          return `${h.valeur}${sec}${unit} at ${t}`;
+        }).join(' -> ');
+        context += `  Recent trend for ${paramCode} (last ${hist.length} values, chronological): ${histStr}\n`;
+      }
     }
   }
 
@@ -111,27 +127,32 @@ function construireContexte(mesures, alertes) {
 /**
  * Fallback message generator for 'secours' mode.
  * Adapts to French or English questions and active alert severity.
+ * Strips any trailing dot from the database alert message to avoid double punctuation ("..").
  */
 function genererReponseSecours(question, alertesActives) {
   const isFrench = /[éàèêëîïôöùûüç]|\b(pourquoi|comment|qu|est-ce|mesure|mon|ma|mes|alerte|santé|oxygène|coeur|pouls|sommeil)\b/i.test(question);
 
+  const cleanMessage = (msg) => (msg ? msg.trim().replace(/\.+$/, '') : '');
+
   if (isFrench) {
     if (alertesActives && alertesActives.length > 0) {
       const premiereAlerte = alertesActives[0];
+      const messageNettoye = cleanMessage(premiereAlerte.message);
       if (premiereAlerte.niveau === 'critique') {
-        return `Je ne parviens pas à joindre le service d'IA pour le moment. Une alerte critique est active : ${premiereAlerte.message}. Contactez immédiatement le médecin au sol.`;
+        return `Je ne parviens pas à joindre le service d'IA pour le moment. Une alerte critique est active : ${messageNettoye}. Contactez immédiatement le médecin au sol.`;
       }
-      return `Je ne parviens pas à joindre le service d'IA pour le moment. Alerte active : ${premiereAlerte.message}. Reposez-vous, reprenez votre mesure dans 10 minutes et contactez le médecin au sol si la situation ne s'améliore pas.`;
+      return `Je ne parviens pas à joindre le service d'IA pour le moment. Alerte active : ${messageNettoye}. Reposez-vous, reprenez votre mesure dans 10 minutes et contactez le médecin au sol si la situation ne s'améliore pas.`;
     }
     return "Je ne parviens pas à joindre le service d'IA pour le moment. Vos dernières mesures sont affichées sur votre tableau de bord. Si une alerte est active, reposez-vous, reprenez votre mesure dans 10 minutes et contactez le médecin au sol si la situation ne s'améliore pas.";
   }
 
   if (alertesActives && alertesActives.length > 0) {
     const premiereAlerte = alertesActives[0];
+    const messageNettoye = cleanMessage(premiereAlerte.message);
     if (premiereAlerte.niveau === 'critique') {
-      return `I cannot reach the AI service right now. An active critical alert is in place: ${premiereAlerte.message}. Please contact the ground doctor immediately.`;
+      return `I cannot reach the AI service right now. An active critical alert is in place: ${messageNettoye}. Please contact the ground doctor immediately.`;
     }
-    return `I cannot reach the AI service right now. An active alert is in place: ${premiereAlerte.message}. Please rest, re-measure in 10 minutes, and contact the ground doctor if it does not improve.`;
+    return `I cannot reach the AI service right now. An active alert is in place: ${messageNettoye}. Please rest, re-measure in 10 minutes, and contact the ground doctor if it does not improve.`;
   }
   return "I cannot reach the AI service right now. Your latest values are shown on the dashboard. If an alert is active, rest, re-measure in 10 minutes and contact the ground doctor if it does not improve.";
 }
@@ -158,12 +179,15 @@ router.post('/chat', async (req, res) => {
   }
 
   try {
-    // 2. Fetch latest measurements for this astronaut
+    // 2. Fetch latest measurements for this astronaut with normal ranges
     const sqlMesures = `
       SELECT
+          p.id_parametre,
           p.code AS code,
           p.libelle,
           p.unite,
+          p.plage_normale_min,
+          p.plage_normale_max,
           m.valeur,
           m.valeur_secondaire,
           m.horodatage
@@ -183,27 +207,57 @@ router.post('/chat', async (req, res) => {
     `;
     const dernieresMesures = await queryAsync(sqlMesures, [id_astronaute]);
 
-    // 3. Fetch active alerts for this astronaut
+    // 3. Fetch active alerts for this astronaut with associated parameter info
     const sqlAlertes = `
       SELECT
-          id_alerte,
-          id_astronaute,
-          niveau,
-          message,
-          date_creation,
-          statut
-      FROM alerte
-      WHERE id_astronaute = ?
-        AND statut = 'active'
-      ORDER BY date_creation DESC;
+          al.id_alerte,
+          al.id_astronaute,
+          al.niveau,
+          al.message,
+          al.date_creation,
+          al.statut,
+          m.id_parametre,
+          p.code AS code_parametre,
+          p.libelle AS libelle_parametre,
+          p.unite
+      FROM alerte al
+      INNER JOIN mesure m ON al.id_mesure = m.id_mesure
+      INNER JOIN parametre p ON m.id_parametre = p.id_parametre
+      WHERE al.id_astronaute = ?
+        AND al.statut = 'active'
+      ORDER BY al.date_creation DESC;
     `;
     const alertesActives = await queryAsync(sqlAlertes, [id_astronaute]);
 
     // ID of the most recent active alert, if any
     const idAlerteActive = alertesActives.length > 0 ? alertesActives[0].id_alerte : null;
 
-    // 4. Build BNF11 compliant context (vital signs only, zero personal data)
-    const contexteSante = construireContexte(dernieresMesures, alertesActives);
+    // 4. For each distinct parameter in alert, fetch its last 5 measurements
+    const historiqueParametresAlerte = {};
+    const parametresVus = new Set();
+
+    for (const a of alertesActives) {
+      if (a.id_parametre && !parametresVus.has(a.id_parametre)) {
+        parametresVus.add(a.id_parametre);
+        const sqlHist = `
+          SELECT
+              m.valeur,
+              m.valeur_secondaire,
+              m.horodatage
+          FROM mesure m
+          WHERE m.id_astronaute = ?
+            AND m.id_parametre = ?
+          ORDER BY m.horodatage DESC
+          LIMIT 5;
+        `;
+        const rows = await queryAsync(sqlHist, [id_astronaute, a.id_parametre]);
+        // Put in chronological order (oldest to newest)
+        historiqueParametresAlerte[a.code_parametre] = rows.reverse();
+      }
+    }
+
+    // 5. Build BNF11 compliant context (vital signs only, zero personal data)
+    const contexteSante = construireContexte(dernieresMesures, alertesActives, historiqueParametresAlerte);
 
     const messages = [
       { role: 'system', content: SYSTEM_PROMPT },
@@ -213,7 +267,7 @@ router.post('/chat', async (req, res) => {
       }
     ];
 
-    // 5. Attempt AI call with fallback to secours
+    // 6. Attempt AI call with fallback to secours
     let reponse = '';
     let mode = 'IA';
 
@@ -225,8 +279,10 @@ router.post('/chat', async (req, res) => {
       reponse = genererReponseSecours(question, alertesActives);
     }
 
-    // 6. Record messages in database (table message_ia)
+    // 7. Record messages in database (table message_ia)
+    // Add 1 second to assistant message to guarantee strict chronological order in history
     const now = new Date();
+    const assistantTimestamp = new Date(now.getTime() + 1000);
     const idMessageUser = crypto.randomUUID();
     const idMessageAssistant = crypto.randomUUID();
 
@@ -255,14 +311,14 @@ router.post('/chat', async (req, res) => {
       false
     ]);
 
-    // Insert assistant answer
+    // Insert assistant answer (with +1000ms timestamp)
     await queryAsync(insertSql, [
       idMessageAssistant,
       id_astronaute,
       idAlerteActive,
       'assistant',
       reponse,
-      now,
+      assistantTimestamp,
       mode,
       false
     ]);
