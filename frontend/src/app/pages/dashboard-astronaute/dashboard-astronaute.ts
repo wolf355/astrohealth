@@ -3,7 +3,8 @@ import { isPlatformBrowser } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { Chart, registerables } from 'chart.js';
-import { forkJoin, timer, of, switchMap, catchError } from 'rxjs';
+import { Subject, forkJoin, merge, timer, of, switchMap, catchError } from 'rxjs';
+import { SocketService } from '../../services/socket.service';
 import { ApiService, Alerte, Astronaute, MesureRecente, Parametre } from '../../services/api.service';
 
 Chart.register(...registerables);
@@ -26,7 +27,8 @@ export class DashboardAstronaute implements AfterViewInit {
   private api = inject(ApiService);
   private platformId = inject(PLATFORM_ID);
   private destroyRef = inject(DestroyRef);
-
+  private socket = inject(SocketService);
+  private declencheur = new Subject<void>();
   idAstronaute = 1;
   mission = 'Artemis-X';
   jour = 42;
@@ -69,11 +71,17 @@ export class DashboardAstronaute implements AfterViewInit {
     this.demarrerChargement();
   }
 
-  demarrerChargement() {
+    demarrerChargement() {
+    this.socket.evenements$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(evenement => {
+      if (evenement.id_astronaute === this.idAstronaute) {
+        this.declencheur.next();
+      }
+    });
+
     this.api.getParametres().pipe(
       switchMap(liste => {
         this.parametres = liste;
-        return timer(0, 5000);
+        return merge(timer(0, 5000), this.declencheur);
       }),
       switchMap(() =>
         forkJoin({
