@@ -16,6 +16,7 @@ Depuis la **racine du projet** (le dossier `astrohealth`) :
 ```
 node simulator/simulator.js --dry                      # test : affiche sans rien envoyer
 node simulator/simulator.js                            # journée normale, envoi à l'API
+node simulator/simulator.js --sommeil                  # envoie aussi le sommeil (dont Sara à 4,5 h)
 node simulator/simulator.js --scenario=oxygene         # scénario de démonstration
 ```
 
@@ -29,6 +30,7 @@ Arrêter : `Ctrl+C`.
 | Option | Valeur par défaut | Effet |
 |---|---|---|
 | `--dry` | désactivé | affiche les mesures sans les envoyer |
+| `--sommeil` | désactivé | envoie aussi le sommeil de chaque astronaute (dont Sara à 4,5 h). Sans cette option, le sommeil n'est pas envoyé |
 | `--scenario=normal` | `normal` | valeurs normales avec un léger bruit, tourne sans fin |
 | `--scenario=oxygene` | | baisse d'oxygène, puis arrêt automatique (25 envois) |
 | `--cible=2` | `1` | astronaute touché par le scénario (1 = Alex) |
@@ -52,7 +54,7 @@ Il n'utilise pas non plus Socket.IO (c'est le back-end qui émet `nouvelle_mesur
   "code_parametre": "SPO2",
   "valeur": 91,
   "valeur_secondaire": null,
-  "horodatage": "2026-11-12T14:32:05.120Z",
+  "horodatage": "2026-11-13 14:32:05",
   "source": "simulateur",
   "synchronisee": false
 }
@@ -61,6 +63,8 @@ Il n'utilise pas non plus Socket.IO (c'est le back-end qui émet `nouvelle_mesur
 Les noms de champs sont ceux de la table `mesure`. `code_parametre` est ajouté pour faciliter le travail du back-end.
 `id_mesure` est un UUID généré par le simulateur (mode hors ligne).
 
+`horodatage` est en heure locale, au format `AAAA-MM-JJ HH:MM:SS` (format attendu par la base).
+
 ## Ce qui est simulé
 
 | Paramètre | `id_parametre` | Fréquence d'envoi |
@@ -68,33 +72,6 @@ Les noms de champs sont ceux de la table `mesure`. `code_parametre` est ajouté 
 | FC (bpm) | 1 | à chaque série |
 | SPO2 (%) | 2 | à chaque série |
 | TEMP (°C) | 3 | à chaque série |
-| SOMMEIL (h) | 6 | une seule fois, au démarrage |
+| SOMMEIL (h) | 6 | une seule fois, au démarrage, **seulement avec `--sommeil`** |
 
-Les `id_parametre` suivent l'ordre d'insertion de la table `parametre`. Si l'ordre change, modifier l'objet `PARAMETRES` en haut du script.
-
-### Équipage (valeurs de base)
-
-| `id_astronaute` | Nom | FC | SpO2 | Temp | Sommeil |
-|---|---|---|---|---|---|
-| 1 | Alex Moreau | 72 | 98 | 36,8 | 7,2 |
-| 2 | Sara Khan | 76 | 97 | 36,7 | 4,5 |
-| 3 | Leo Tanaka | 69 | 99 | 36,6 | 7,0 |
-| 4 | Mia Rossi | 73 | 98 | 36,8 | 6,8 |
-
-À vérifier : ces `id_astronaute` doivent exister dans la base. Sinon, modifier le tableau `EQUIPAGE` dans `simulator.js`.
-
-## Scénario « oxygene » (démonstration)
-
-Sur l'astronaute ciblé (Alex par défaut), en 20 séries :
-
-- SpO2 : 98 % → 85 %
-- FC : 72 → 108 bpm
-- les autres astronautes restent normaux
-
-Résultat attendu avec les seuils par défaut (voir `docs/regles-alertes.md`) :
-
-1. SpO2 passe sous 92 % : alerte **attention** (orange)
-2. SpO2 passe sous 88 % : alerte **critique** (rouge)
-3. Au démarrage, Sara a 4,5 h de sommeil : alerte **attention** sur le sommeil
-
-La fréquence cardiaque d'Alex reste sous 120 bpm : elle ne déclenche pas d'alerte.
+Les `id_parametre` suivent l'ordre d'insertion de la table `parametre`. Si

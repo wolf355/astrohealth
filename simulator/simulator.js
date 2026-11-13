@@ -4,6 +4,7 @@
 // Exemples :
 //   node simulator/simulator.js --dry                      (affiche sans envoyer)
 //   node simulator/simulator.js                            (journée normale, envoi à l'API)
+//   node simulator/simulator.js --sommeil                  (envoie aussi le sommeil, dont Sara à 4,5 h)
 //   node simulator/simulator.js --scenario=oxygene         (baisse de SpO2 d'Alex)
 //   node simulator/simulator.js --interval=1000 --api=http://localhost:3000/api/mesures
 
@@ -20,6 +21,7 @@ const API_URL = args.api || process.env.API_URL || 'http://localhost:3000/api/me
 const INTERVAL_MS = Number(args.interval || 2000);
 const SCENARIO = args.scenario || 'normal'; // normal | oxygene
 const DRY_RUN = Boolean(args.dry);
+const AVEC_SOMMEIL = Boolean(args.sommeil); // le sommeil n'est envoyé que sur demande
 const CIBLE = Number(args.cible || 1); // astronaute touché par le scénario
 
 // ---------- Paramètres (ids = ordre d'insertion dans la table parametre) ----------
@@ -43,6 +45,13 @@ const EQUIPAGE = [
 const bruit = (amplitude) => (Math.random() - 0.5) * 2 * amplitude;
 const arrondir = (v, d) => Number(v.toFixed(d));
 const limiter = (v, min, max) => Math.min(max, Math.max(min, v));
+
+// Heure locale au format "AAAA-MM-JJ HH:MM:SS" (format attendu par la base)
+function horodatageLocal() {
+  const d = new Date();
+  const p = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+}
 
 // Scénario "oxygène" : SpO2 98 -> 85 et FC 72 -> 108 en ETAPES ticks
 const ETAPES = 20;
@@ -75,7 +84,7 @@ function creerMesure(astro, code, valeur) {
     code_parametre: code,           // pratique pour le back-end
     valeur,
     valeur_secondaire: null,
-    horodatage: new Date().toISOString(),
+    horodatage: horodatageLocal(),
     source: 'simulateur',
     synchronisee: false,
   };
@@ -104,9 +113,12 @@ async function main() {
   console.log(`Simulateur AstroHealth | scénario : ${SCENARIO} | ${DRY_RUN ? 'DRY-RUN' : API_URL}`);
   console.log(`Une série de mesures toutes les ${INTERVAL_MS} ms. Ctrl+C pour arrêter.\n`);
 
-  // Le sommeil est envoyé une seule fois au démarrage (1 paramètre spatial pour le MVP)
-  for (const astro of EQUIPAGE) {
-    await envoyer(creerMesure(astro, 'SOMMEIL', astro.SOMMEIL), astro);
+  // Le sommeil est envoyé une seule fois au démarrage, et seulement avec --sommeil
+  // (sinon le sommeil de Sara à 4,5 h recréerait une alerte à chaque lancement)
+  if (AVEC_SOMMEIL) {
+    for (const astro of EQUIPAGE) {
+      await envoyer(creerMesure(astro, 'SOMMEIL', astro.SOMMEIL), astro);
+    }
   }
 
   let tick = 0;
