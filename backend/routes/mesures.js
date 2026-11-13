@@ -55,7 +55,7 @@ router.post('/', async (req, res) => {
             ]
         );
 
-        // Verifier les seuils et creer une alerte si necessaire
+        // 2. Vérifier les seuils et créer une alerte si nécessaire
         const alerte = await verifierEtCreerAlerte(
             connection,
             {
@@ -69,28 +69,76 @@ router.post('/', async (req, res) => {
             }
         );
 
-        //  Confirmation de toutes les operations
+        // 3. Récupérer les informations nécessaires pour Socket.IO
+        const [infos] = await connection.execute(
+            `SELECT p.code, u.nom_code
+             FROM Parametre p
+             JOIN Astronaute a ON a.id_astronaute = ?
+             JOIN Utilisateur u ON u.id_utilisateur = a.id_utilisateur
+             WHERE p.id_parametre = ?`,
+            [id_astronaute, id_parametre]
+        );
+
+        if (infos.length === 0) {
+            throw new Error('Informations de mesure introuvables');
+        }
+
+        const { code, nom_code } = infos[0];
+// Récupérer la date de création de l'alerte
+let date_creation = null;
+if (alerte) {
+    const [alerteInfos] = await connection.execute(
+        `SELECT date_creation FROM Alerte WHERE id_alerte = ?`,
+        [alerte.id_alerte]
+    );
+    date_creation = alerteInfos[0].date_creation;
+}
+
+        // 4. Confirmer les opérations dans la base de données
         await connection.commit();
+
+        // 5. Envoyer les événements Socket.IO
+        const io = req.app.get('io');
+
+        io.emit('nouvelle_mesure', {
+            id_astronaute,
+            code,
+            valeur: Number(valeur),
+            horodatage
+        });
+
+        if (alerte) {
+            io.emit('nouvelle_alerte', {
+                id_alerte: alerte.id_alerte,
+                id_astronaute,
+                nom_code,
+                niveau: alerte.niveau,
+                message: alerte.message,
+                date_creation
+
+            });
+        }
+
         return res.status(201).json({
-            message: 'Mesure enregistree avec succes',
+            message: 'Mesure enregistrée avec succès',
             id_mesure,
             alerte
         });
 
     } catch (error) {
-    try {
-        await connection.rollback();
-    } catch (rollbackError) {
-        console.error('Erreur rollback:', rollbackError);
+        try {
+            await connection.rollback();
+        } catch (rollbackError) {
+            console.error('Erreur rollback:', rollbackError);
+        }
+
+        console.error(error);
+
+        return res.status(500).json({
+            message: "Erreur lors de l'enregistrement de la mesure ou de la création de l'alerte"
+        });
     }
-
-    console.error(error);
-    return res.status(500).json({
-        message: "Erreur lors de l'enregistrement de la mesure ou de la creation de l'alerte"
-    });
-}
 });
-
 
 
 

@@ -6,11 +6,34 @@ import parametresRouter from './routes/parametres.js';
 import astronautesRouter from './routes/astronautes.js';
 import alertesRouter from './routes/alertes.js';
 import mesuresRouter from './routes/mesures.js';
+import { createServer } from 'node:http';
+import { Server } from 'socket.io';
 import assistantRouter from './routes/assistant.js';
-
 
 dotenv.config();
 const app = express();
+
+
+
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+    cors: {
+        origin: 'http://localhost:4200',
+        methods: ['GET', 'POST']
+    }
+});
+
+io.on('connection', (socket) => {
+    console.log('Client connected:', socket.id);
+
+    socket.on('disconnect', () => {
+        console.log('Client disconnected:', socket.id);
+    });
+});
+app.set('io', io);
+
+
+
 
 //middlewares before all routes 
 app.use(cors());
@@ -30,7 +53,7 @@ app.get('/' , (req, res)=>{
 // start server (app)
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () =>{
+httpServer.listen(PORT, () => {
     console.log(`server running on port ${PORT}`);
 });
 
