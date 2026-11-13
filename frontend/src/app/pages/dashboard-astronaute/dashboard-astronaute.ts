@@ -41,9 +41,10 @@ export class DashboardAstronaute implements AfterViewInit {
   derniereMaj = signal('');
 
   chatOuvert = false;
-  messages: { auteur: string; texte: string }[] = [
-    { auteur: 'assistant', texte: 'Hello! I am the AstroHealth assistant. Ask me about your vital signs or your alerts.' }
-  ];
+  enAttente = signal(false);
+  messages = signal<{ auteur: string; texte: string; mode: string }[]>([
+    { auteur: 'assistant', texte: 'Hello! I am the AstroHealth assistant. Ask me about your vital signs or your alerts.', mode: '' }
+  ]);
 
   private parametres: Parametre[] = [];
   private graphFc?: Chart;
@@ -217,24 +218,34 @@ export class DashboardAstronaute implements AfterViewInit {
     this.chatOuvert = !this.chatOuvert;
   }
 
-  envoyer(champ: HTMLInputElement) {
+    envoyer(champ: HTMLInputElement) {
     const question = champ.value.trim();
-    if (question === '') {
+    if (question === '' || this.enAttente()) {
       return;
     }
-    this.messages.push({ auteur: 'utilisateur', texte: question });
+
+    this.ajouterMessage('utilisateur', question, '');
     champ.value = '';
-    this.messages.push({ auteur: 'assistant', texte: this.reponseAssistant() });
+    this.enAttente.set(true);
+
+    this.api.envoyerQuestion(this.idAstronaute, question).subscribe({
+      next: (rep) => {
+        this.ajouterMessage('assistant', rep.reponse, rep.mode);
+        this.enAttente.set(false);
+      },
+      error: () => {
+        this.ajouterMessage(
+          'assistant',
+          'The assistant is not reachable right now. Your latest values are shown on the dashboard. '
+            + 'If an alert is active, rest, re-measure in 10 minutes and contact the ground doctor if it does not improve.',
+          'secours'
+        );
+        this.enAttente.set(false);
+      }
+    });
   }
 
-  // Réponses préécrites (mode de secours). Sera remplacé par l'appel à l'API.
-  reponseAssistant(): string {
-    const alerte = this.alerteActive();
-    if (alerte) {
-      return 'Active alert: ' + alerte.message + ' I cannot give a diagnosis. '
-        + 'Please rest, re-measure in 10 minutes, and contact the ground doctor if it does not improve.';
-    }
-    return 'Your latest measurements are shown on the dashboard. '
-      + 'I can explain your values and your alerts, but I cannot give a medical diagnosis.';
+  ajouterMessage(auteur: string, texte: string, mode: string) {
+    this.messages.update(liste => [...liste, { auteur: auteur, texte: texte, mode: mode }]);
   }
 }

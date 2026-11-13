@@ -85,16 +85,23 @@
         Not a medical diagnosis. Always contact the ground doctor for serious symptoms.
       </div>
 
-      <div class="chat-messages">
-        @for (m of messages; track $index) {
-          <div [class]="'message ' + m.auteur">{{ m.texte }}</div>
+            <div class="chat-messages">
+        @for (m of messages(); track $index) {
+          <div [class]="'message ' + m.auteur">
+            {{ m.texte }}
+            @if (m.mode === 'secours') {
+              <span class="mode">backup answer (AI service unavailable)</span>
+            }
+          </div>
+        }
+        @if (enAttente()) {
+          <div class="message assistant">Thinking...</div>
         }
       </div>
 
       <div class="chat-saisie">
         <input #champ type="text" placeholder="Ask a question..." (keyup.enter)="envoyer(champ)">
-        <button (click)="envoyer(champ)">Send</button>
-      </div>
+        <button [disabled]="enAttente()" (click)="envoyer(champ)">Send</button>      </div>
     </div>
   }
 </div>

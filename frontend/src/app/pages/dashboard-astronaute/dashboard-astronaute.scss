@@ -333,3 +333,22 @@ nav a.actif {
   color: white;
   cursor: pointer;
 }
+.badge.aucune {
+  background: rgba(148, 163, 184, 0.15);
+  color: var(--texte-secondaire);
+}
+
+.point.hors-ligne {
+  background: var(--rouge);
+}
+
+.maj {
+  font-size: 12px;
+}
+
+.mode {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--texte-secondaire);
+}
