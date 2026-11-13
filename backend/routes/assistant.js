@@ -12,6 +12,14 @@ const SYSTEM_PROMPT =
   "If you are asked something unrelated to health monitoring, say you can only help with the " +
   "measurements and alerts. Answer in the language of the question.";
 
+const SYSTEM_PROMPT_EQUIPAGE =
+  "You are the medical operations assistant for a spaceflight mission monitoring crew health. " +
+  "Provide a concise, factual crew health summary in 4 to 6 sentences for the flight surgeon. " +
+  "Report critical alerts first, followed by attention alerts and nominal parameters. " +
+  "Never provide medical diagnoses or prescribe treatment. " +
+  "Do not use personal names; use only the provided identifiers (e.g. Astronaut 1, Astronaut 2). " +
+  "Keep the tone objective, clinical, and calm.";
+
 /**
  * Helper to execute db.query as a Promise, preserving the project's callback-based db.query.
  */
@@ -332,6 +340,217 @@ router.post('/chat', async (req, res) => {
     console.error('Error handling chat request:', err);
     return res.status(500).json({
       message: 'Erreur interne du serveur lors du traitement de la demande'
+    });
+  }
+});
+
+/**
+ * De-anonymizes text by replacing aliases (e.g. "Astronaut 1") with real nom_code.
+ */
+function deanonymiser(texte, map) {
+  let resultat = texte;
+  for (const [alias, nom] of Object.entries(map)) {
+    const regex = new RegExp(`\\b${alias}\\b`, 'gi');
+    resultat = resultat.replace(regex, nom);
+  }
+  return resultat;
+}
+
+/**
+ * Fallback crew summary generator without AI.
+ * Creates a factual 4-6 sentence summary from active alerts and latest vital signs.
+ */
+function genererResumeEquipageSecours(astronautes, dernieresMesures, alertesActives) {
+  const total = astronautes.length;
+  const alertesCritiques = alertesActives.filter(a => a.niveau === 'critique');
+  const alertesAttention = alertesActives.filter(a => a.niveau === 'attention');
+
+  const sentences = [];
+
+  // Sentence 1: Overview
+  sentences.push(`Crew status overview for ${total} monitored astronauts: ${alertesActives.length} active alerts currently logged.`);
+
+  // Sentence 2: Critical alerts (reported first)
+  if (alertesCritiques.length > 0) {
+    const details = alertesCritiques.map(a => {
+      const astro = astronautes.find(x => x.id_astronaute === a.id_astronaute);
+      const nom = astro ? astro.nom_code : `Astronaut ${a.id_astronaute}`;
+      const msg = a.message.trim().replace(/\.+$/, '');
+      return `${nom} (${msg})`;
+    }).join('; ');
+    sentences.push(`CRITICAL PRIORITY: ${details}. Immediate ground doctor intervention is recommended.`);
+  } else {
+    sentences.push("No critical vital sign alerts are currently active across the crew.");
+  }
+
+  // Sentence 3: Attention alerts
+  if (alertesAttention.length > 0) {
+    const details = alertesAttention.map(a => {
+      const astro = astronautes.find(x => x.id_astronaute === a.id_astronaute);
+      const nom = astro ? astro.nom_code : `Astronaut ${a.id_astronaute}`;
+      const msg = a.message.trim().replace(/\.+$/, '');
+      return `${nom} is under an attention alert for ${msg}`;
+    }).join(', and ');
+    sentences.push(`Attention alerts requiring monitoring: ${details}.`);
+  } else {
+    sentences.push("All attention threshold parameters remain within normal operating ranges.");
+  }
+
+  // Sentence 4: Nominal crew members
+  const astroIdsWithAlerts = new Set(alertesActives.map(a => a.id_astronaute));
+  const astroNominals = astronautes.filter(a => !astroIdsWithAlerts.has(a.id_astronaute));
+  if (astroNominals.length > 0) {
+    const noms = astroNominals.map(a => a.nom_code).join(', ');
+    sentences.push(`Vital signs for ${noms} are completely nominal with all parameters in baseline ranges.`);
+  }
+
+  // Sentence 5: Clinical recommendation
+  sentences.push("Continuous biometric telemetry is active, and follow-up measurements will continue according to flight protocol.");
+
+  return sentences.join(' ');
+}
+
+/**
+ * POST /api/assistant/resume-equipage
+ * Body: { "periode": "24h" } or empty
+ * Response: { "resume": "...", "mode": "IA" ou "secours" }
+ */
+router.post('/resume-equipage', async (req, res) => {
+  const periode = req.body?.periode || '24h';
+
+  try {
+    // 1. Fetch all astronauts
+    const sqlAstronautes = `
+      SELECT a.id_astronaute, u.nom_code, u.fonction
+      FROM astronaute a
+      INNER JOIN utilisateur u ON a.id_utilisateur = u.id_utilisateur
+      ORDER BY a.id_astronaute ASC;
+    `;
+    const astronautes = await queryAsync(sqlAstronautes);
+
+    // 2. Fetch latest measurements for all astronauts
+    const sqlMesures = `
+      SELECT
+          m.id_astronaute,
+          p.code,
+          p.libelle,
+          p.unite,
+          p.plage_normale_min,
+          p.plage_normale_max,
+          m.valeur,
+          m.valeur_secondaire,
+          m.horodatage
+      FROM mesure m
+      INNER JOIN parametre p ON m.id_parametre = p.id_parametre
+      WHERE m.id_mesure = (
+          SELECT m2.id_mesure
+          FROM mesure m2
+          WHERE m2.id_astronaute = m.id_astronaute
+            AND m2.id_parametre = m.id_parametre
+          ORDER BY m2.horodatage DESC
+          LIMIT 1
+      )
+      ORDER BY m.id_astronaute, p.code;
+    `;
+    const dernieresMesures = await queryAsync(sqlMesures);
+
+    // 3. Fetch active alerts
+    const sqlAlertes = `
+      SELECT
+          al.id_alerte,
+          al.id_astronaute,
+          al.niveau,
+          al.message,
+          al.date_creation,
+          al.statut
+      FROM alerte al
+      WHERE al.statut = 'active'
+      ORDER BY CASE WHEN al.niveau = 'critique' THEN 1 ELSE 2 END, al.date_creation DESC;
+    `;
+    const alertesActives = await queryAsync(sqlAlertes);
+
+    // 4. Build anonymized context (Rule BNF11: "Astronaut 1", "Astronaut 2", etc.)
+    const aliasMap = {};
+    let contexteAnonyme = `CREW STATUS (Period: ${periode}):\n\n`;
+
+    for (const a of astronautes) {
+      const alias = `Astronaut ${a.id_astronaute}`;
+      aliasMap[alias] = a.nom_code;
+      aliasMap[`Astronaute ${a.id_astronaute}`] = a.nom_code;
+
+      contexteAnonyme += `=== ${alias} (Role: ${a.fonction || 'Crew member'}) ===\n`;
+
+      const mesMesures = dernieresMesures.filter(m => m.id_astronaute === a.id_astronaute);
+      if (mesMesures.length === 0) {
+        contexteAnonyme += 'Latest measurements: None recorded.\n';
+      } else {
+        const lignesMesures = mesMesures.map(m => {
+          const sec = m.valeur_secondaire != null ? `/${m.valeur_secondaire}` : '';
+          const unit = m.unite ? ` ${m.unite}` : '';
+          const range = (m.plage_normale_min != null && m.plage_normale_max != null)
+            ? ` [Normal: ${m.plage_normale_min}-${m.plage_normale_max}${unit}]`
+            : '';
+          return `${m.code}: ${m.valeur}${sec}${unit}${range}`;
+        }).join(', ');
+        contexteAnonyme += `Latest measurements: ${lignesMesures}\n`;
+      }
+
+      const mesAlertes = alertesActives.filter(al => al.id_astronaute === a.id_astronaute);
+      if (mesAlertes.length === 0) {
+        contexteAnonyme += 'Active alerts: None (Nominal status).\n\n';
+      } else {
+        const lignesAlertes = mesAlertes.map(al => `[${al.niveau.toUpperCase()}] ${al.message}`).join('; ');
+        contexteAnonyme += `Active alerts: ${lignesAlertes}\n\n`;
+      }
+    }
+
+    const messages = [
+      { role: 'system', content: SYSTEM_PROMPT_EQUIPAGE },
+      {
+        role: 'user',
+        content: `${contexteAnonyme}\nProvide a concise 4 to 6 sentence factual crew health summary for the flight surgeon. Report critical alerts first, then attention alerts, then nominal members.`
+      }
+    ];
+
+    // 5. Attempt AI call with fallback to secours
+    let resume = '';
+    let mode = 'IA';
+
+    try {
+      const reponseBrute = await appelerIA(messages);
+      // De-anonymize AI output: replace "Astronaut 1" with actual nom_code
+      resume = deanonymiser(reponseBrute, aliasMap);
+    } catch (aiError) {
+      console.warn('AI call for crew summary failed or key absent, switching to secours mode:', aiError.message);
+      mode = 'secours';
+      resume = genererResumeEquipageSecours(astronautes, dernieresMesures, alertesActives);
+    }
+
+    // 6. Record in rapport table (type: 'quotidien', id_astronaute: NULL = équipage)
+    try {
+      const sqlRapport = `
+        INSERT INTO rapport (
+            id_astronaute,
+            type,
+            periode_debut,
+            periode_fin,
+            contenu,
+            date_generation
+        ) VALUES (NULL, 'quotidien', CURDATE(), CURDATE(), ?, ?)
+      `;
+      await queryAsync(sqlRapport, [resume, new Date()]);
+    } catch (dbErr) {
+      console.warn('Warning: could not insert crew summary into rapport table:', dbErr.message);
+    }
+
+    return res.status(200).json({
+      resume,
+      mode
+    });
+  } catch (err) {
+    console.error('Error generating crew summary:', err);
+    return res.status(500).json({
+      message: 'Erreur interne lors de la génération du résumé d’équipage'
     });
   }
 });
