@@ -84,6 +84,15 @@ router.post('/', async (req, res) => {
         }
 
         const { code, nom_code } = infos[0];
+// Récupérer la date de création de l'alerte
+let date_creation = null;
+if (alerte) {
+    const [alerteInfos] = await connection.execute(
+        `SELECT date_creation FROM Alerte WHERE id_alerte = ?`,
+        [alerte.id_alerte]
+    );
+    date_creation = alerteInfos[0].date_creation;
+}
 
         // 4. Confirmer les opérations dans la base de données
         await connection.commit();
@@ -104,7 +113,9 @@ router.post('/', async (req, res) => {
                 id_astronaute,
                 nom_code,
                 niveau: alerte.niveau,
-                message: alerte.message
+                message: alerte.message,
+                date_creation
+
             });
         }
 
