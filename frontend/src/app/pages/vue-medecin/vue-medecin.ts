@@ -5,7 +5,7 @@ import { RouterLink } from '@angular/router';
 import { Chart, registerables } from 'chart.js';
 import { Subject, forkJoin, merge, of, timer, switchMap, catchError } from 'rxjs';
 import { ApiService, Alerte, Astronaute, MesureRecente, Parametre } from '../../services/api.service';
-
+import { SocketService } from '../../services/socket.service';
 Chart.register(...registerables);
 
 interface CarteAstronaute {
@@ -36,7 +36,7 @@ export class VueMedecin implements AfterViewInit {
   private api = inject(ApiService);
   private platformId = inject(PLATFORM_ID);
   private destroyRef = inject(DestroyRef);
-
+  private socket = inject(SocketService);
   medecin = 'Dr. Maya Chen';
   mission = 'Artemis-X';
   jour = 42;
@@ -88,6 +88,9 @@ export class VueMedecin implements AfterViewInit {
   }
 
   demarrerChargement() {
+        this.socket.evenements$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.declencheur.next();
+    });
     this.api.getParametres().pipe(
       switchMap(liste => {
         this.parametres = liste;
