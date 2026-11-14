@@ -122,6 +122,7 @@ The full specification is in the `docs` folder.
 
 - **Measurements are simulated.** No real astronaut data is used.
 - Normal ranges and alert thresholds are indicative values chosen by the team. 
+- The parameters AstroHealth monitors are organized around NASA's Human Research Program framework of the five hazards of human spaceflight (see docs/sources-nasa.md), with the Canadian Space Agency's work on radiation monitoring as additional motivation.
 
 ## Use of AI
 
@@ -139,4 +140,4 @@ The full specification is in the `docs` folder.
 
 ## Team OrionX
 
-hajar en-neyah (Team Owner), Sara Sedki, ABBOU Aimrane, hicham imlahi
+hajar en-neyah (Team Owner), Sara Sedki, ABBOU Aimrane, hicham imlahi , Hamza Koujili
