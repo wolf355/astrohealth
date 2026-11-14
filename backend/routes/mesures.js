@@ -131,9 +131,7 @@ if (alerte) {
         } catch (rollbackError) {
             console.error('Erreur rollback:', rollbackError);
         }
-
         console.error(error);
-
         return res.status(500).json({
             message: "Erreur lors de l'enregistrement de la mesure ou de la création de l'alerte"
         });
