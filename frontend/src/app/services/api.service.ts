@@ -38,6 +38,10 @@ export interface ReponseAssistant {
   mode: string;
   id_message: string;
 }
+export interface ResumeEquipage {
+  resume: string;
+  mode: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -87,6 +91,9 @@ export class ApiService {
     });
   }
 
+    genererResumeEquipage(): Observable<ResumeEquipage> {
+    return this.http.post<ResumeEquipage>(this.adresse + '/assistant/resume-equipage', {});
+  }
   private convertirMesure(m: any): MesureRecente {
     return {
       code: m.code,

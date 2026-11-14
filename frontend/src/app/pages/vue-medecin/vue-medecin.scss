@@ -342,3 +342,20 @@ nav a {
   text-decoration: none;
   cursor: pointer;
 }
+
+.resume-mode {
+  margin: 0;
+  padding: 0 16px 12px;
+  font-size: 11px;
+  color: var(--texte-secondaire);
+}
+
+.bouton-actualiser {
+  margin: 0 16px 16px;
+  padding: 6px 12px;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+}

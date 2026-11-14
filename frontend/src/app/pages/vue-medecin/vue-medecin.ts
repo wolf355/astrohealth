@@ -46,6 +46,8 @@ export class VueMedecin implements AfterViewInit {
   lienEnLigne = signal(true);
   derniereMaj = signal('');
   resume = signal('');
+    modeResume = signal('');
+  resumeEnCours = signal(false);
   titreGraphique = signal('Heart rate (bpm)');
   paramActif = signal('FC');
   periodeActive = signal('6h');
@@ -158,14 +160,7 @@ export class VueMedecin implements AfterViewInit {
     this.equipage.set(cartes);
     this.alertes.set(d.alertes);
 
-    if (d.alertes.length === 0) {
-      this.resume.set('No active alerts. All crew members are within the normal range. '
-        + 'This summary is not a medical diagnosis.');
-    } else {
-      this.resume.set(d.alertes.length + ' active alert(s): '
-        + d.alertes.map(a => a.nom_code + ' - ' + a.message).join(' | ')
-        + ' This summary is generated from the current data and is not a medical diagnosis.');
-    }
+  
 
     this.dessiner();
     this.derniereMaj.set(new Date().toLocaleTimeString('en-GB'));
@@ -320,7 +315,26 @@ export class VueMedecin implements AfterViewInit {
     this.dessiner();
   }
 
-  ouvrirFermerResume() {
+    ouvrirFermerResume() {
     this.resumeOuvert = !this.resumeOuvert;
+    if (this.resumeOuvert) {
+      this.genererResume();
+    }
+  }
+
+  genererResume() {
+    this.resumeEnCours.set(true);
+    this.api.genererResumeEquipage().subscribe({
+      next: (rep) => {
+        this.resume.set(rep.resume);
+        this.modeResume.set(rep.mode);
+        this.resumeEnCours.set(false);
+      },
+      error: () => {
+        this.resume.set('The summary service is not reachable right now. The active alerts are listed in the table.');
+        this.modeResume.set('secours');
+        this.resumeEnCours.set(false);
+      }
+    });
   }
 }
