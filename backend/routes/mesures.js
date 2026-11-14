@@ -100,7 +100,7 @@ if (alerte) {
         // 5. Envoyer les événements Socket.IO
         const io = req.app.get('io');
 
-        io.emit('nouvelle_mesure', {
+        io?.emit('nouvelle_mesure', {
             id_astronaute,
             code,
             valeur: Number(valeur),
@@ -108,7 +108,7 @@ if (alerte) {
         });
 
         if (alerte) {
-            io.emit('nouvelle_alerte', {
+            io?.emit('nouvelle_alerte', {
                 id_alerte: alerte.id_alerte,
                 id_astronaute,
                 nom_code,
